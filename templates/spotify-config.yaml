@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spotify-config
+data:
+  CLIENT_ID: {{ .Values.spotify.clientId }}
+  REDIRECT_URI: {{ .Values.spotify.redirectUri }}

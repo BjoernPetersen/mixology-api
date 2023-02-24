@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-born
+    cert-manager.io/issue-temporary-certificate: "false"
+spec:
+  rules:
+    - host: api.mix.bembel.party
+      http:
+        paths:
+          - backend:
+              service:
+                name: api
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - api.mix.bembel.party
+      secretName: api-tls

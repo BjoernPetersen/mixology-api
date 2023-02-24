@@ -1,0 +1,105 @@
+name: Main
+
+on:
+  push:
+    branches: [ main ]
+  pull_request: { }
+
+env:
+  APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app:${{ github.sha }}
+  MIGRATIONS_IMAGE_NAME: ghcr.io/${{ github.repository }}/migrations:${{ github.sha }}
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    container:
+      image: dart:2.19
+    steps:
+      - uses: actions/checkout@v2
+      - name: Dart format check
+        run: dart format --set-exit-if-changed --output=none lib test bin
+
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: dart:2.19
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get dependencies
+        run: dart pub get
+      - name: Code generation
+        run: dart run build_runner build
+      - name: Dart analyze
+        run: dart analyze --fatal infos
+
+  build-image:
+    runs-on: ubuntu-latest
+    needs: [ format-check, lint ]
+    if: ${{ success() && github.ref != 'refs/heads/main' }}
+    steps:
+      - name: Build container image
+        uses: docker/build-push-action@v4
+        with:
+          tags: $APP_IMAGE_NAME
+
+  push-migrations-image:
+    runs-on: ubuntu-latest
+    if: success() && github.ref == 'refs/heads/main'
+    needs:
+      - format-check
+      - lint
+    steps:
+      - # Setting up Docker Buildx with docker-container driver is required
+        # at the moment to be able to use a subdirectory with Git context
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ github.token }}
+      - name: Build container image
+        uses: docker/build-push-action@v4
+        with:
+          context: "{{defaultContext}}:migrations"
+          push: true
+          tags: $MIGRATIONS_IMAGE_NAME
+
+  push-image:
+    runs-on: ubuntu-latest
+    needs: [ format-check, lint ]
+    if: ${{ success() && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ github.token }}
+      - name: Build container image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ghcr.io/${{ github.repository }}/app:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [push-image, push-migrations-image]
+    concurrency: production
+    steps:
+      - uses: actions/checkout@v3
+      - name: Substitute environment variables in values.yaml
+        run: "envsubst < values.yaml > values_sub.yaml && mv values_sub.yaml values.yaml"
+        env:
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          JWT_ACCESS: ${{ secrets.JWT_ACCESS }}
+          JWT_OAUTH: ${{ secrets.JWT_OAUTH }}
+          JWT_REFRESH: ${{ secrets.JWT_REFRESH }}
+      - name: Store Kubeconfig
+        run: mkdir ~/.kube && printenv "KUBECONFIG" > ~/.kube/config && chmod 400 ~/.kube/config
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG_RAW }}
+      - name: Upgrade helm installation
+        run: helm upgrade api . --install --namespace=mixology

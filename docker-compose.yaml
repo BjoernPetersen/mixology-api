@@ -1,0 +1,16 @@
+version: "3.8"
+volumes:
+  pg_data:
+
+services:
+  db:
+    volumes:
+      - pg_data:/data
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_PASSWORD: pw
+      PGDATA: /data
+    healthcheck:
+      test: pg_isready
+    ports:
+      - "5432:5432"

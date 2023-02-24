@@ -1,0 +1,67 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      initContainers:
+        - name: migrations
+          image: {{ .Values.image.migrations }}
+          args:
+            - migrate
+            - -skipCheckForUpdate
+          env:
+            - name: FLYWAY_URL
+              value: jdbc:postgresql://$(POSTGRES_HOSTNAME):5432/$(POSTGRES_DB)
+            - name: FLYWAY_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: POSTGRES_USER
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.user }}.{{ .Values.postgres.host }}.credentials.postgresql.acid.zalan.do
+                  key: password
+      containers:
+        - name: app
+          image: {{ .Values.image.app }}
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 25m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /health/live
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.user }}.{{ .Values.postgres.host }}.credentials.postgresql.acid.zalan.do
+                  key: password
+          envFrom:
+            - configMapRef:
+                name: api-config
+            - secretRef:
+                name: api-secrets

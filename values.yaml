@@ -1,0 +1,18 @@
+image:
+  app: $APP_IMAGE_NAME
+  migrations: $MIGRATIONS_IMAGE_NAME
+
+jwt:
+  access:
+  oauth:
+  refresh:
+
+postgres:
+  db: mixology
+  user: mixer
+  host: database
+
+spotify:
+  clientId: ${CLIENT_ID}
+  clientSecret: ${CLIENT_SECRET}
+  redirectUri: "https://api.mix.bembel.party/auth/callback"
