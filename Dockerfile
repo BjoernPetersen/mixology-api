@@ -19,6 +19,6 @@ COPY --from=build /app/bin/server /app/bin/
 
 WORKDIR /app
 
-# Start server.
+ENV SHELF_HOTRELOAD=false
 EXPOSE 8080
 ENTRYPOINT ["/app/bin/server"]

@@ -42,6 +42,8 @@ spec:
       containers:
         - name: app
           image: {{ .Values.image.app }}
+          args:
+            - run-api
           imagePullPolicy: IfNotPresent
           resources:
             requests:
