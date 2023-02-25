@@ -13,7 +13,7 @@ class User<ID extends Uuid?> {
     required this.spotifyRefreshToken,
   });
 
-  static User<Null> register({
+  static User<void> register({
     required String spotifyId,
     required String name,
     required String spotifyRefreshToken,
