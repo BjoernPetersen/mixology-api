@@ -50,7 +50,7 @@ class DatabaseConfig {
   }
 }
 
-@injectable
+@singleton
 class Config {
   final String accessTokenJwtKey;
   final String refreshTokenJwtKey;
