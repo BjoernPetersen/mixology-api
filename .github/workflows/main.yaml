@@ -11,7 +11,7 @@ jobs:
     container:
       image: dart:2.19
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Dart format check
         run: dart format --set-exit-if-changed --output=none lib test bin
 
@@ -20,7 +20,7 @@ jobs:
     container:
       image: dart:2.19
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Get dependencies
         run: dart pub get
       - name: Code generation
