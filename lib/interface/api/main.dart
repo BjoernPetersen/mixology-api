@@ -19,7 +19,6 @@ class MixologyApi {
     this.app,
     this.authMiddleware,
   ) : _router = Router().plus {
-    _router.use(corsMiddleware());
     _router.use(ExceptionHandlingMiddleware());
     _router.get('/health/live', health);
 
@@ -47,7 +46,7 @@ class MixologyApi {
 
   Future<void> serve() async {
     await shelfRun(
-      () => _router,
+      () => corsMiddleware().addHandler(_router),
       defaultBindAddress: InternetAddress.anyIPv4,
     );
   }
