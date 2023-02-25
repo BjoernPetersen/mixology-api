@@ -30,7 +30,7 @@ jobs:
       - name: Code generation
         run: dart run build_runner build
       - name: Dart analyze
-        run: dart analyze --fatal infos
+        run: dart analyze --fatal-infos
 
   build-image:
     runs-on: ubuntu-latest
