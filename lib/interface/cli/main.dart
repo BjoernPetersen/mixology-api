@@ -19,8 +19,7 @@ class _RunApi extends Command<void> {
 
   @override
   Future<void> run() async {
-    final app = initialize();
-    final api = MixologyApi(app);
+    final MixologyApi api = initialize();
     await api.serve();
   }
 }

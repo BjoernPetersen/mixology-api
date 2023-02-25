@@ -6,4 +6,5 @@ abstract class UserRepository {
   Future<User<Uuid>?> findBySpotifyId(String spotifyId);
   Future<User<Uuid>> insertUser(User<void> user);
   Future<void> updateUser(User<Uuid> user);
+  Future<void> deleteUser(Uuid userId);
 }

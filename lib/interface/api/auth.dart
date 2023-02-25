@@ -1,8 +1,8 @@
-import 'dart:convert';
-
+import 'package:injectable/injectable.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:mixology_backend/application/app.dart';
+import 'package:mixology_backend/application/ports/token_factory.dart';
 import 'package:mixology_backend/interface/api/util.dart';
 import 'package:shelf_plus/shelf_plus.dart';
 import 'package:spotify_api/spotify_api.dart';
@@ -31,27 +31,18 @@ class AuthApi {
     );
   }
 
-  Future<Response> refresh(Request request) async {
-    final authHeader = request.headers['Authorization'];
-    final prefixLength = 'Bearer '.length;
-    if (authHeader == null || authHeader.length < prefixLength) {
-      return Response.unauthorized(null);
-    }
-    final refreshToken = authHeader.substring(prefixLength);
+  Future<RefreshResponse> refresh(Request request) async {
+    final refreshToken = _getTokenFromHeader(request);
     final tokens = await app.refreshAuth(
       refreshToken: refreshToken,
     );
     if (tokens == null) {
-      return Response.unauthorized(null);
+      throw UnauthorizedException();
     }
 
-    return Response.ok(
-      jsonEncode(
-        RefreshResponse(
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-        ).toJson(),
-      ),
+    return RefreshResponse(
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     );
   }
 }
@@ -92,4 +83,43 @@ class TokenPairResponse {
   });
 
   Json toJson() => _$TokenPairResponseToJson(this);
+}
+
+String _getTokenFromHeader(Request request) {
+  final authHeader = request.headers['Authorization'];
+  final prefixLength = 'Bearer '.length;
+  if (authHeader == null || authHeader.length < prefixLength) {
+    throw UnauthorizedException();
+  }
+  return authHeader.substring(prefixLength);
+}
+
+@injectable
+class AuthMiddleware {
+  final TokenFactory _tokenFactory;
+
+  AuthMiddleware(this._tokenFactory);
+
+  Future<Response> _authenticate(Request request, Handler next) async {
+    final token = _getTokenFromHeader(request);
+    final userId = await _tokenFactory.checkAccessTokenValidity(
+      accessToken: token,
+    );
+
+    if (userId == null) {
+      throw UnauthorizedException();
+    }
+
+    final newRequest = request.change(
+      context: {
+        'principal': Principal(userId: userId),
+      },
+    );
+
+    return await next(newRequest);
+  }
+
+  Handler call(Handler next) {
+    return (request) => _authenticate(request, next);
+  }
 }

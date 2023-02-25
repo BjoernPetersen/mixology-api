@@ -138,4 +138,19 @@ class PostgresUserRepository implements UserRepository {
       );
     });
   }
+
+  @override
+  Future<void> deleteUser(Uuid userId) async {
+    await useConnection((db) async {
+      await db.execute(
+        '''
+        DELETE FROM $tableName
+        WHERE $columnId = @userId;
+        ''',
+        substitutionValues: {
+          'userId': userId.toString(),
+        },
+      );
+    });
+  }
 }

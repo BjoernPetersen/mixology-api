@@ -45,4 +45,9 @@ class MemoryUserRepository implements UserRepository {
     _users.removeWhere((element) => element.id == user.id);
     _users.add(user);
   }
+
+  @override
+  Future<void> deleteUser(Uuid userId) async {
+    _users.removeWhere((element) => element.id == userId);
+  }
 }
