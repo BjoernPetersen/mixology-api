@@ -4,4 +4,4 @@ metadata:
   name: spotify-config
 data:
   CLIENT_ID: {{ .Values.spotify.clientId }}
-  REDIRECT_URI: {{ .Values.spotify.redirectUri }}
+  REDIRECT_URI: {{ .Values.spotify.redirectUri | quote }}
