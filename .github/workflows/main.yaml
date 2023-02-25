@@ -40,7 +40,7 @@ jobs:
       - name: Build container image
         uses: docker/build-push-action@v4
         with:
-          tags: $APP_IMAGE_NAME
+          tags: ${APP_IMAGE_NAME}
 
   push-migrations-image:
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
         with:
           context: "{{defaultContext}}:migrations"
           push: true
-          tags: $MIGRATIONS_IMAGE_NAME
+          tags: ${MIGRATIONS_IMAGE_NAME}
 
   push-image:
     runs-on: ubuntu-latest
@@ -81,7 +81,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ghcr.io/${{ github.repository }}/app:${{ github.sha }}
+          tags: ${APP_IMAGE_NAME}
 
   deploy:
     runs-on: ubuntu-latest
