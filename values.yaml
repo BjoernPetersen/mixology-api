@@ -3,9 +3,9 @@ image:
   migrations: $MIGRATIONS_IMAGE_NAME
 
 jwt:
-  access:
-  oauth:
-  refresh:
+  access: ${JWT_ACCESS}
+  oauth: ${JWT_OAUTH}
+  refresh: ${JWT_REFRESH}
 
 postgres:
   db: mixology
