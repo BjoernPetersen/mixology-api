@@ -23,14 +23,17 @@ spec:
           args:
             - migrate
             - -skipCheckForUpdate
+          envFrom:
+            - configMapRef:
+                name: db-config
           env:
             - name: FLYWAY_URL
-              value: jdbc:postgresql://$(POSTGRES_HOSTNAME):5432/$(POSTGRES_DB)
+              value: jdbc:postgresql://$(DB_HOST):5432/$(DB_NAME)
             - name: FLYWAY_USER
               valueFrom:
                 configMapKeyRef:
-                  name: backend-config
-                  key: POSTGRES_USER
+                  name: db-config
+                  key: DB_USER
             - name: FLYWAY_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -62,6 +65,8 @@ spec:
                   key: password
           envFrom:
             - configMapRef:
-                name: api-config
+                name: db-config
+            - configMapRef:
+                name: spotify-config
             - secretRef:
                 name: api-secrets
