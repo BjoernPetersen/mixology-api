@@ -15,4 +15,4 @@ postgres:
 spotify:
   clientId: ${CLIENT_ID}
   clientSecret: ${CLIENT_SECRET}
-  redirectUri: "https://mix.bembel.party/#/auth/callback"
+  redirectUri: "https://mix.bembel.party/auth/callback"
