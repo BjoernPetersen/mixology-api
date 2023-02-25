@@ -10,7 +10,7 @@ jwt:
 postgres:
   db: mixology
   user: mixer
-  host: database
+  host: api-database
 
 spotify:
   clientId: ${CLIENT_ID}
