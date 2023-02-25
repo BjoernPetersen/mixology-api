@@ -36,7 +36,7 @@ jobs:
       - name: Build container image
         uses: docker/build-push-action@v4
         with:
-          tags: ghcr.io/${{ github.repository }}/app:${{ github.sha }}
+          tags: ghcr.io/bjoernpetersen/app:${{ github.sha }}
 
   push-migrations-image:
     runs-on: ubuntu-latest
@@ -60,7 +60,7 @@ jobs:
         with:
           context: "{{defaultContext}}:migrations"
           push: true
-          tags: ghcr.io/${{ github.repository }}/migrations:${{ github.sha }}
+          tags: ghcr.io/bjoernpetersen/migrations:${{ github.sha }}
 
   push-image:
     runs-on: ubuntu-latest
@@ -77,7 +77,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ghcr.io/${{ github.repository }}/app:${{ github.sha }}
+          tags: ghcr.io/bjoernpetersen/app:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -88,8 +88,8 @@ jobs:
       - name: Substitute environment variables in values.yaml
         run: "envsubst < values.yaml > values_sub.yaml && mv values_sub.yaml values.yaml"
         env:
-          APP_IMAGE_NAME: ghcr.io/${{ github.repository }}/app:${{ github.sha }}
-          MIGRATIONS_IMAGE_NAME: ghcr.io/${{ github.repository }}/migrations:${{ github.sha }}
+          APP_IMAGE_NAME: ghcr.io/bjoernpetersen/app:${{ github.sha }}
+          MIGRATIONS_IMAGE_NAME: ghcr.io/bjoernpetersen/migrations:${{ github.sha }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           JWT_ACCESS: ${{ secrets.JWT_ACCESS }}
@@ -100,4 +100,4 @@ jobs:
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG_RAW }}
       - name: Upgrade helm installation
-        run: helm upgrade api . --install --namespace=mixology
+        run: helm upgrade api . --install --namespace=mixology --atomic
