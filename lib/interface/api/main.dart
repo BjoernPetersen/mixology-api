@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mixology_backend/application/app.dart';
 import 'package:mixology_backend/interface/api/account.dart';
 import 'package:mixology_backend/interface/api/auth.dart';
+import 'package:mixology_backend/interface/api/cors.dart';
 import 'package:mixology_backend/interface/api/exceptions.dart';
 import 'package:shelf_plus/shelf_plus.dart';
 
@@ -18,6 +19,7 @@ class MixologyApi {
     this.app,
     this.authMiddleware,
   ) : _router = Router().plus {
+    _router.use(corsMiddleware());
     _router.use(ExceptionHandlingMiddleware());
     _router.get('/health/live', health);
 
