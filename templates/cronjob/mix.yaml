@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mix-playlists
+spec:
+  schedule: '0 */4 * * *'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 8
+  failedJobsHistoryLimit: 2
+  startingDeadlineSeconds: 1200
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: {{ .Values.image.app }}
+              args: [ mix ]
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 100m
+                  memory: 128Mi
+              env:
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.postgres.user }}.{{ .Values.postgres.host }}.credentials.postgresql.acid.zalan.do
+                      key: password
+              envFrom:
+                - configMapRef:
+                    name: db-config
+                - configMapRef:
+                    name: spotify-config
+                - secretRef:
+                    name: api-secrets
