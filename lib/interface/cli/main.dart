@@ -1,11 +1,12 @@
 import 'package:args/command_runner.dart';
+import 'package:mixology_backend/application/app.dart';
 import 'package:mixology_backend/init.dart';
 import 'package:mixology_backend/interface/api/main.dart';
 
 Future<void> main(List<String> args) async {
   final runner = CommandRunner('server', '')
     ..addCommand(_RunApi())
-    ..addCommand(_Shuffle());
+    ..addCommand(_Mix());
 
   await runner.run(args);
 }
@@ -24,16 +25,16 @@ class _RunApi extends Command<void> {
   }
 }
 
-class _Shuffle extends Command<void> {
+class _Mix extends Command<void> {
   @override
-  String get name => 'shuffle';
+  String get name => 'mix';
 
   @override
-  String get description => 'Shuffles playlists for enrolled users';
+  String get description => 'Mixes playlists for enrolled users';
 
   @override
   Future<void> run() async {
-    print('running *wink*');
-    await Future.delayed(const Duration(seconds: 5));
+    final app = initialize<Application>();
+    await app.mixPlaylists();
   }
 }

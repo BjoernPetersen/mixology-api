@@ -13,6 +13,7 @@ dependencies:
   injectable: ^2.1.0
   json_annotation: ^4.8.0
   meta: ^1.0.0
+  mutex: ^3.0.1
   postgres: ^2.0.0
   sane_uuid: ^1.0.0-alpha.4
   shelf: ^1.4.0
