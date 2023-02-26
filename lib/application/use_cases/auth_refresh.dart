@@ -24,18 +24,31 @@ class AuthRefresh {
     }
 
     final userId = tokenData.userId;
+    String? spotifyId = tokenData.spotifyId;
+    if (spotifyId == null) {
+      final user = await userRepository.findById(userId);
+      if (user == null) {
+        return null;
+      }
+      spotifyId = user.spotifyId;
+    }
+
     final inThirtyDays = DateTime.now().toUtc().add(const Duration(days: 30));
     final String? newRefreshToken;
     if (tokenData.expiration.isBefore(inThirtyDays)) {
       newRefreshToken = await tokenFactory.generateRefreshToken(
         userId: userId,
+        spotifyId: spotifyId,
       );
     } else {
       newRefreshToken = null;
     }
 
     return RefreshedTokenPair(
-      accessToken: await tokenFactory.generateAccessToken(userId: userId),
+      accessToken: await tokenFactory.generateAccessToken(
+        userId: userId,
+        spotifyId: spotifyId,
+      ),
       refreshToken: newRefreshToken,
     );
   }

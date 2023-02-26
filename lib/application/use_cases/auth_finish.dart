@@ -46,8 +46,14 @@ class AuthFinish {
     }
 
     return TokenPair(
-      accessToken: await tokenFactory.generateAccessToken(userId: user.id),
-      refreshToken: await tokenFactory.generateRefreshToken(userId: user.id),
+      accessToken: await tokenFactory.generateAccessToken(
+        userId: user.id,
+        spotifyId: user.spotifyId,
+      ),
+      refreshToken: await tokenFactory.generateRefreshToken(
+        userId: user.id,
+        spotifyId: user.spotifyId,
+      ),
     );
   }
 }

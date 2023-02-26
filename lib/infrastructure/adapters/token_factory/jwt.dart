@@ -35,15 +35,19 @@ class JwtTokenFactory implements TokenFactory {
         Duration(seconds: jwt.payload['exp']).inMilliseconds,
       ),
       userId: Uuid.fromString(jwt.subject!),
+      spotifyId: jwt.payload['spotifyId'],
     );
   }
 
   @override
   Future<String> generateAccessToken({
     required Uuid userId,
+    required String spotifyId,
   }) async {
     final jwt = JWT(
-      {},
+      {
+        'spotifyId': spotifyId,
+      },
       subject: userId.toString(),
     );
     return jwt.sign(
@@ -55,9 +59,12 @@ class JwtTokenFactory implements TokenFactory {
   @override
   Future<String> generateRefreshToken({
     required Uuid userId,
+    required String spotifyId,
   }) async {
     final jwt = JWT(
-      {},
+      {
+        'spotifyId': spotifyId,
+      },
       subject: userId.toString(),
     );
     return jwt.sign(
