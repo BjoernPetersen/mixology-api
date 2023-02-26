@@ -50,6 +50,8 @@ class MixPlaylistsResponse {
   final List<MixPlaylistResponse> playlists;
 
   MixPlaylistsResponse(this.playlists);
+
+  Json toJson() => _$MixPlaylistsResponseToJson(this);
 }
 
 @immutable
@@ -64,4 +66,6 @@ class MixPlaylistResponse {
     required this.name,
     required this.lastMix,
   });
+
+  Json toJson() => _$MixPlaylistResponseToJson(this);
 }
