@@ -2,7 +2,12 @@ import 'dart:io';
 
 import 'package:shelf/shelf.dart';
 
-const _corsHeaders = {'Access-Control-Allow-Origin': '*'};
+const _corsHeaders = {
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization',
+  'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+};
 
 Middleware corsMiddleware() {
   Response? handleOptions(Request request) {
