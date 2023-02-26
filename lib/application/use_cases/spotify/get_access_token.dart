@@ -24,7 +24,7 @@ class GetAccessToken {
     final accessToken = await api.rawAccessToken;
     return TokenInfo(
       value: accessToken,
-      expiration: DateTime.now().add(Duration(minutes: 10)),
+      expiration: DateTime.now().toUtc().add(Duration(minutes: 10)),
     );
   }
 }

@@ -24,7 +24,7 @@ class AuthRefresh {
     }
 
     final userId = tokenData.userId;
-    final inThirtyDays = DateTime.now().add(const Duration(days: 30));
+    final inThirtyDays = DateTime.now().toUtc().add(const Duration(days: 30));
     final String? newRefreshToken;
     if (tokenData.expiration.isBefore(inThirtyDays)) {
       newRefreshToken = await tokenFactory.generateRefreshToken(
