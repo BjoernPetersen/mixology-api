@@ -61,6 +61,7 @@ class MixPlaylists {
           continue;
         }
 
+        logger.i('Mixed playlist ${playlist.id}');
         lastPlaylist = playlist;
       }
     } finally {
