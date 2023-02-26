@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:mixology_backend/application/domain/mix_playlist.dart';
 import 'package:mixology_backend/application/ports/spotify_api.dart';
 import 'package:mixology_backend/application/repos/mix_playlist.dart';
@@ -9,6 +10,7 @@ import 'package:spotify_api/spotify_api.dart';
 
 @injectable
 class MixPlaylists {
+  final Logger logger;
   final MixPlaylistRepository playlistRepo;
   final UserRepository userRepo;
   final SpotifyApiProvider apiProvider;
@@ -19,6 +21,7 @@ class MixPlaylists {
     this.apiProvider,
     this.playlistRepo,
     this.userRepo,
+    this.logger,
   )   : _mutex = Mutex(),
         _clients = {};
 
@@ -39,23 +42,33 @@ class MixPlaylists {
   }
 
   Future<void> call() async {
+    logger.i('Mixing playlists');
     final playlists = await playlistRepo.listAll();
-    MixPlaylist? lastPlaylist;
-    for (final playlist in playlists) {
-      if (playlist.id == lastPlaylist?.id) {
-        continue;
-      }
 
-      try {
-        final api = await _getApi(playlist.userId);
-        await _mixPlaylist(api, playlist.id);
-      } catch (e) {
-        // TODO: log
-        continue;
-      }
+    try {
+      MixPlaylist? lastPlaylist;
+      for (final playlist in playlists) {
+        if (playlist.id == lastPlaylist?.id) {
+          logger.d('Skipping duplicate playlist ${playlist.id}');
+          continue;
+        }
 
-      lastPlaylist = playlist;
+        try {
+          final api = await _getApi(playlist.userId);
+          await _mixPlaylist(api, playlist.id);
+        } catch (e) {
+          logger.e('Could not mix playlist ${playlist.id}', e);
+          continue;
+        }
+
+        lastPlaylist = playlist;
+      }
+    } finally {
+      for (final api in _clients.values) {
+        api.close();
+      }
     }
+    logger.i('Done.');
   }
 
   Future<void> _mixPlaylist(
