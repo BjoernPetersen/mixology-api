@@ -10,7 +10,13 @@ class AuthStart {
   Future<Uri> call() async {
     // TODO: maybe we could find something as a user-context
     return await authFlow.generateAuthorizationUrl(
-      scopes: [Scope.userTopRead],
+      scopes: [
+        Scope.userLibraryRead,
+        Scope.playlistReadCollaborative,
+        Scope.playlistReadPrivate,
+        Scope.playlistModifyPrivate,
+        Scope.playlistModifyPublic,
+      ],
       userContext: null,
     );
   }
