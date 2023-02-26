@@ -14,7 +14,8 @@ spec:
         spec:
           restartPolicy: Never
           containers:
-            - name: {{ .Values.image.app }}
+            - name: app
+              image: {{ .Values.image.app }}
               args: [ mix ]
               resources:
                 requests:
