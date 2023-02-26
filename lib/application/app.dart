@@ -4,6 +4,9 @@ import 'package:mixology_backend/application/use_cases/account/get.dart';
 import 'package:mixology_backend/application/use_cases/auth_finish.dart';
 import 'package:mixology_backend/application/use_cases/auth_refresh.dart';
 import 'package:mixology_backend/application/use_cases/auth_start.dart';
+import 'package:mixology_backend/application/use_cases/mix_playlist/add.dart';
+import 'package:mixology_backend/application/use_cases/mix_playlist/delete.dart';
+import 'package:mixology_backend/application/use_cases/mix_playlist/list_for_user.dart';
 import 'package:mixology_backend/application/use_cases/spotify/get_access_token.dart';
 
 @injectable
@@ -17,6 +20,10 @@ class Application {
 
   final GetAccessToken getAccessToken;
 
+  final AddMixPlaylist addMixPlaylist;
+  final DeleteMixPlaylist deleteMixPlaylist;
+  final ListMixPlaylistsForUser listMixPlaylistsForUser;
+
   Application(
     this.finishAuth,
     this.refreshAuth,
@@ -24,5 +31,8 @@ class Application {
     this.deleteAccount,
     this.getAccount,
     this.getAccessToken,
+    this.addMixPlaylist,
+    this.deleteMixPlaylist,
+    this.listMixPlaylistsForUser,
   );
 }
