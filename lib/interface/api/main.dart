@@ -7,6 +7,7 @@ import 'package:mixology_backend/interface/api/account.dart';
 import 'package:mixology_backend/interface/api/auth.dart';
 import 'package:mixology_backend/interface/api/cors.dart';
 import 'package:mixology_backend/interface/api/exceptions.dart';
+import 'package:mixology_backend/interface/api/spotify.dart';
 import 'package:shelf_plus/shelf_plus.dart';
 
 @injectable
@@ -25,6 +26,7 @@ class MixologyApi {
     _registerAuth();
 
     _registerAccount(authMiddleware);
+    _registerSpotify(authMiddleware);
   }
 
   void _registerAuth() {
@@ -38,6 +40,11 @@ class MixologyApi {
     final api = AccountApi(app);
     _router.delete('/account', api.deleteAccount, use: middleware);
     _router.get('/account', api.getAccount, use: middleware);
+  }
+
+  void _registerSpotify(Middleware middleware) {
+    final api = SpotifyApi(app);
+    _router.get('/spotify/accessToken', api.getAccessToken, use: middleware);
   }
 
   Response health(Request request) {

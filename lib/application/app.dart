@@ -4,6 +4,7 @@ import 'package:mixology_backend/application/use_cases/account/get.dart';
 import 'package:mixology_backend/application/use_cases/auth_finish.dart';
 import 'package:mixology_backend/application/use_cases/auth_refresh.dart';
 import 'package:mixology_backend/application/use_cases/auth_start.dart';
+import 'package:mixology_backend/application/use_cases/spotify/get_access_token.dart';
 
 @injectable
 class Application {
@@ -14,11 +15,14 @@ class Application {
   final DeleteAccount deleteAccount;
   final GetAccount getAccount;
 
+  final GetAccessToken getAccessToken;
+
   Application(
     this.finishAuth,
     this.refreshAuth,
     this.startAuth,
     this.deleteAccount,
     this.getAccount,
+    this.getAccessToken,
   );
 }
