@@ -50,6 +50,8 @@ class MixPlaylists {
     try {
       MixPlaylist? lastPlaylist;
       for (final playlist in playlists) {
+        logger.i('Now mixing playlist ${playlist.id}');
+
         if (playlist.id == lastPlaylist?.id) {
           logger.d('Skipping duplicate playlist ${playlist.id}');
           continue;
@@ -63,7 +65,6 @@ class MixPlaylists {
           continue;
         }
 
-        logger.i('Mixed playlist ${playlist.id}');
         lastPlaylist = playlist;
       }
     } finally {
