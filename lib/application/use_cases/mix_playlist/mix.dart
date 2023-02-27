@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:mixology_backend/application/domain/mix_playlist.dart';
@@ -82,18 +84,49 @@ class MixPlaylists {
       throw ArgumentError.value(id, 'playlistId', 'playlist does not exist');
     }
 
-    // TODO: implement full shuffle
-    await api.playlists.reorderPlaylistItems(
-      playlistId: id,
-      snapshotId: playlist.snapshotId,
-      rangeStart: 0,
-      insertBefore: 2,
-    );
+    final random = Random();
+    final playlistSize = playlist.tracks.total;
+    String snapshotId = playlist.snapshotId;
+    // Perform a Fisher-Yates shuffle
+    for (var i = playlistSize - 1; i >= 0; i -= 1) {
+      final j = random.nextInt(i + 1);
+      if (j == i) {
+        continue;
+      }
+      snapshotId = await api.playlists.swapItems(
+        lower: j,
+        higher: i,
+        playlistId: playlist.id,
+        snapshotId: snapshotId,
+      );
+    }
 
     await playlistRepo.update(
       id: id,
       name: playlist.name,
       lastMix: DateTime.now().toUtc(),
+    );
+  }
+}
+
+extension on SpotifyPlaylistApi {
+  Future<String> swapItems({
+    required int higher,
+    required int lower,
+    required String playlistId,
+    required String snapshotId,
+  }) async {
+    snapshotId = await reorderPlaylistItems(
+      playlistId: playlistId,
+      snapshotId: snapshotId,
+      rangeStart: lower,
+      insertBefore: higher,
+    );
+    return await reorderPlaylistItems(
+      playlistId: playlistId,
+      snapshotId: snapshotId,
+      rangeStart: higher,
+      insertBefore: lower,
     );
   }
 }
