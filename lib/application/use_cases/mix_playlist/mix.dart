@@ -29,7 +29,7 @@ class MixPlaylists {
 
   Future<SpotifyWebApi> _getApi(Uuid userId) async {
     return _mutex.protect(() async {
-      SpotifyWebApi? client = _clients[userId];
+      var client = _clients[userId];
       if (client == null) {
         final user = await userRepo.findById(userId);
         if (user == null) {
@@ -100,7 +100,7 @@ class MixPlaylists {
     // Note that this should still result in a random permutation, since every
     // item that has not been moved yet gets the same random change to be
     // assigned for each i.
-    String snapshotId = playlist.snapshotId;
+    var snapshotId = playlist.snapshotId;
     for (var i = playlistSize; i >= 1; i -= 1) {
       // 0 <= j < i
       final j = random.nextInt(i);

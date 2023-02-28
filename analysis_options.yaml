@@ -18,6 +18,7 @@ include: package:lints/recommended.yaml
 linter:
   rules:
     always_use_package_imports: true
+    omit_local_variable_types: true
     prefer_single_quotes: true
     sort_pub_dependencies: true
 

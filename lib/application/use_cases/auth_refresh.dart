@@ -24,7 +24,7 @@ class AuthRefresh {
     }
 
     final userId = tokenData.userId;
-    String? spotifyId = tokenData.spotifyId;
+    var spotifyId = tokenData.spotifyId;
     if (spotifyId == null) {
       final user = await userRepository.findById(userId);
       if (user == null) {
