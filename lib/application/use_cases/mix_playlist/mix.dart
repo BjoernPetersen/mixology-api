@@ -87,16 +87,30 @@ class MixPlaylists {
 
     final random = Random();
     final playlistSize = playlist.tracks.total;
+    // Perform a modified Fisher-Yates shuffle.
+    // Instead of swapping elements, we just move the item from the lower index
+    // to the higher index (which starts "after" the end of the list).
+    //
+    // If we were working on an array, this would be awful, because the items in
+    // the list after the lower index would have to shift one index to the left,
+    // but we can think of the playlist as a linked list, were this operation is
+    // cheap. In return for doing this, we only have to perform one API call per
+    // item, instead of two for a swap.
+    //
+    // Note that this should still result in a random permutation, since every
+    // item that has not been moved yet gets the same random change to be
+    // assigned for each i.
     String snapshotId = playlist.snapshotId;
-    // Perform a Fisher-Yates shuffle
-    for (var i = playlistSize - 1; i >= 0; i -= 1) {
-      final j = random.nextInt(i + 1);
-      if (j == i) {
+    for (var i = playlistSize; i >= 1; i -= 1) {
+      // 0 <= j < i
+      final j = random.nextInt(i);
+      if (j == i + 1) {
+        // Inserting item 2 before item 3 is a no-op.
         continue;
       }
-      snapshotId = await api.playlists.swapItems(
-        lower: j,
-        higher: i,
+      snapshotId = await api.playlists.reorderPlaylistItems(
+        rangeStart: j,
+        insertBefore: i,
         playlistId: playlist.id,
         snapshotId: snapshotId,
       );
@@ -106,28 +120,6 @@ class MixPlaylists {
       id: id,
       name: playlist.name,
       lastMix: DateTime.now().toUtc(),
-    );
-  }
-}
-
-extension on SpotifyPlaylistApi {
-  Future<String> swapItems({
-    required int higher,
-    required int lower,
-    required String playlistId,
-    required String snapshotId,
-  }) async {
-    snapshotId = await reorderPlaylistItems(
-      playlistId: playlistId,
-      snapshotId: snapshotId,
-      rangeStart: lower,
-      insertBefore: higher,
-    );
-    return await reorderPlaylistItems(
-      playlistId: playlistId,
-      snapshotId: snapshotId,
-      rangeStart: higher,
-      insertBefore: lower,
     );
   }
 }
