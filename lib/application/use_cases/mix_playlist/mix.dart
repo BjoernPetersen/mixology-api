@@ -97,8 +97,8 @@ class MixPlaylists {
     // cheap. In return for doing this, we only have to perform one API call per
     // item, instead of two for a swap.
     //
-    // Note that this should still result in a random permutation, since every
-    // item that has not been moved yet gets the same random change to be
+    // This should still result in a random permutation, since every
+    // item that has not been moved yet gets the same random chance to be
     // assigned for each i.
     var snapshotId = playlist.snapshotId;
     for (var i = playlistSize; i >= 1; i -= 1) {
