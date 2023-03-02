@@ -10,11 +10,11 @@ class DeleteCopyMixPlaylist {
 
   Future<void> call({
     required Uuid userId,
-    required String? sourceId,
+    required String targetId,
   }) async {
     await repo.delete(
       userId: userId,
-      sourcePlaylistId: sourceId,
+      targetPlaylistId: targetId,
     );
   }
 }

@@ -143,16 +143,16 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
   @override
   Future<void> delete({
     required Uuid userId,
-    required String? sourcePlaylistId,
+    required String targetPlaylistId,
   }) async {
     await useConnection((db) async {
       await db.execute(
         '''
         DELETE FROM $tableName
-        WHERE $columnSourceId = @id AND $columnUserId = @userId;
+        WHERE $columnTargetId = @id AND $columnUserId = @userId;
         ''',
         substitutionValues: {
-          'id': sourcePlaylistId,
+          'id': targetPlaylistId,
           'userId': userId.toString(),
         },
       );

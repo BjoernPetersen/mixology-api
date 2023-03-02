@@ -15,6 +15,6 @@ abstract class CopyMixPlaylistRepository {
 
   Future<void> delete({
     required Uuid userId,
-    required String? sourcePlaylistId,
+    required String targetPlaylistId,
   });
 }

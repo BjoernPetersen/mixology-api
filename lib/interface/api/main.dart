@@ -62,7 +62,7 @@ class MixologyApi {
   void _registerCopyMixPlaylist(Middleware middleware) {
     final api = CopyMixPlaylistApi(app);
     _router.put(
-      '/copyMix/<playlistId>',
+      '/copyMix',
       api.addPlaylist,
       use: middleware,
     );

@@ -27,18 +27,19 @@ class CopyMixPlaylistApi {
     ]);
   }
 
-  Future<Response> addPlaylist(Request request, String? playlistId) async {
+  Future<Response> addPlaylist(Request request) async {
+    final sourceId = request.url.queryParameters['playlistId'];
     await app.addCopyMixPlaylist(
       userId: request.principal.userId,
-      sourceId: playlistId,
+      sourceId: sourceId,
     );
     return Response(HttpStatus.noContent);
   }
 
-  Future<Response> deletePlaylist(Request request, String? playlistId) async {
+  Future<Response> deletePlaylist(Request request, String targetId) async {
     await app.deleteCopyMixPlaylist(
       userId: request.principal.userId,
-      sourceId: playlistId,
+      targetId: targetId,
     );
     return Response(HttpStatus.noContent);
   }
