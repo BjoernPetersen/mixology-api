@@ -53,7 +53,7 @@ class MixPlaylists {
         logger.i('Now mixing playlist ${playlist.id}');
 
         if (playlist.id == lastPlaylist?.id) {
-          logger.d('Skipping duplicate playlist ${playlist.id}');
+          logger.i('Skipping duplicate playlist ${playlist.id}');
           continue;
         }
 
@@ -87,6 +87,8 @@ class MixPlaylists {
 
     final random = Random();
     final playlistSize = playlist.tracks.total;
+    logger.i('Playlist contains $playlistSize tracks');
+
     // Perform a modified Fisher-Yates shuffle.
     // Instead of swapping elements, we just move the item from the lower index
     // to the higher index (which starts "after" the end of the list).
