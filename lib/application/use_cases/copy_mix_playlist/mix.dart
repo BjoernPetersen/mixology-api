@@ -95,6 +95,7 @@ class CopyMixPlaylists {
     logger.i('Clearing target playlist $targetId');
     await api.playlists.replacePlaylistItems(playlistId: targetId, uris: []);
 
+    logger.i('Re-inserting all ${trackIds.length} tracks in random order');
     for (final chunk in partition(trackIds, 100)) {
       await api.playlists.addItemsToPlaylist(
         playlistId: targetId,
