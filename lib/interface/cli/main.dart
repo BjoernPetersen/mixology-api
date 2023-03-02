@@ -6,7 +6,8 @@ import 'package:mixology_backend/interface/api/main.dart';
 Future<void> main(List<String> args) async {
   final runner = CommandRunner('server', '')
     ..addCommand(_RunApi())
-    ..addCommand(_Mix());
+    ..addCommand(_Mix())
+    ..addCommand(_CopyMix());
 
   await runner.run(args);
 }
@@ -36,5 +37,19 @@ class _Mix extends Command<void> {
   Future<void> run() async {
     final app = initialize<Application>();
     await app.mixPlaylists();
+  }
+}
+
+class _CopyMix extends Command<void> {
+  @override
+  String get name => 'mix-copy';
+
+  @override
+  String get description => 'Mixes copied playlists for enrolled users';
+
+  @override
+  Future<void> run() async {
+    final app = initialize<Application>();
+    await app.mixCopyPlaylists();
   }
 }

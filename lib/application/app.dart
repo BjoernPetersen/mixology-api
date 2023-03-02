@@ -4,6 +4,10 @@ import 'package:mixology_backend/application/use_cases/account/get.dart';
 import 'package:mixology_backend/application/use_cases/auth_finish.dart';
 import 'package:mixology_backend/application/use_cases/auth_refresh.dart';
 import 'package:mixology_backend/application/use_cases/auth_start.dart';
+import 'package:mixology_backend/application/use_cases/copy_mix_playlist/add.dart';
+import 'package:mixology_backend/application/use_cases/copy_mix_playlist/delete.dart';
+import 'package:mixology_backend/application/use_cases/copy_mix_playlist/list_for_user.dart';
+import 'package:mixology_backend/application/use_cases/copy_mix_playlist/mix.dart';
 import 'package:mixology_backend/application/use_cases/mix_playlist/add.dart';
 import 'package:mixology_backend/application/use_cases/mix_playlist/delete.dart';
 import 'package:mixology_backend/application/use_cases/mix_playlist/list_for_user.dart';
@@ -26,6 +30,11 @@ class Application {
   final ListMixPlaylistsForUser listMixPlaylistsForUser;
   final MixPlaylists mixPlaylists;
 
+  final AddCopyMixPlaylist addCopyMixPlaylist;
+  final DeleteCopyMixPlaylist deleteCopyMixPlaylist;
+  final ListCopyMixPlaylistsForUser listCopyMixPlaylistsForUser;
+  final CopyMixPlaylists mixCopyPlaylists;
+
   Application(
     this.finishAuth,
     this.refreshAuth,
@@ -37,5 +46,9 @@ class Application {
     this.deleteMixPlaylist,
     this.listMixPlaylistsForUser,
     this.mixPlaylists,
+    this.addCopyMixPlaylist,
+    this.deleteCopyMixPlaylist,
+    this.listCopyMixPlaylistsForUser,
+    this.mixCopyPlaylists,
   );
 }

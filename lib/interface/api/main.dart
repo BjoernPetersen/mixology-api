@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mixology_backend/application/app.dart';
 import 'package:mixology_backend/interface/api/account.dart';
 import 'package:mixology_backend/interface/api/auth.dart';
+import 'package:mixology_backend/interface/api/copy_mix_playlist.dart';
 import 'package:mixology_backend/interface/api/cors.dart';
 import 'package:mixology_backend/interface/api/exceptions.dart';
 import 'package:mixology_backend/interface/api/mix_playlist.dart';
@@ -30,6 +31,7 @@ class MixologyApi {
     _registerSpotify(authMiddleware);
 
     _registerMixPlaylist(authMiddleware);
+    _registerCopyMixPlaylist(authMiddleware);
   }
 
   void _registerAuth() {
@@ -55,6 +57,25 @@ class MixologyApi {
     _router.put('/mix/<playlistId>', api.addPlaylist, use: middleware);
     _router.delete('/mix/<playlistId>', api.deletePlaylist, use: middleware);
     _router.get('/mix', api.listPlaylists, use: middleware);
+  }
+
+  void _registerCopyMixPlaylist(Middleware middleware) {
+    final api = CopyMixPlaylistApi(app);
+    _router.put(
+      '/copyMix/<playlistId>',
+      api.addPlaylist,
+      use: middleware,
+    );
+    _router.delete(
+      '/copyMix/<playlistId>',
+      api.deletePlaylist,
+      use: middleware,
+    );
+    _router.get(
+      '/copyMix',
+      api.listPlaylists,
+      use: middleware,
+    );
   }
 
   Response health(Request request) {
