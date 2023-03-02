@@ -67,7 +67,7 @@ class MixologyApi {
       use: middleware,
     );
     _router.delete(
-      '/copyMix/<playlistId>',
+      '/copyMix/<targetId>',
       api.deletePlaylist,
       use: middleware,
     );
