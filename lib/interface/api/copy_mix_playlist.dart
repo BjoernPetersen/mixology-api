@@ -27,7 +27,7 @@ class CopyMixPlaylistApi {
     ]);
   }
 
-  Future<Response> addPlaylist(Request request, String playlistId) async {
+  Future<Response> addPlaylist(Request request, String? playlistId) async {
     await app.addCopyMixPlaylist(
       userId: request.principal.userId,
       sourceId: playlistId,
@@ -35,7 +35,7 @@ class CopyMixPlaylistApi {
     return Response(HttpStatus.noContent);
   }
 
-  Future<Response> deletePlaylist(Request request, String playlistId) async {
+  Future<Response> deletePlaylist(Request request, String? playlistId) async {
     await app.deleteCopyMixPlaylist(
       userId: request.principal.userId,
       sourceId: playlistId,
