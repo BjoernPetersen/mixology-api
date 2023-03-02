@@ -50,13 +50,18 @@ class CopyMixPlaylists {
     try {
       for (final playlist in playlists) {
         final playlistName = playlist.sourceId ?? 'Saved Tracks';
-        logger.i('Now mixing playlist ${playlist.sourceId}');
+        logger.i(
+          'Now mixing playlist $playlistName for user ${playlist.userId}',
+        );
 
         try {
           final api = await _getApi(playlist.userId);
           await _mixPlaylist(api, playlist.sourceId, playlist.targetId);
         } catch (e) {
-          logger.e('Could not mix playlist $playlistName', e);
+          logger.e(
+            'Could not mix playlist $playlistName for user ${playlist.userId}',
+            e,
+          );
           continue;
         }
       }
