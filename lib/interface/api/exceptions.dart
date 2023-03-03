@@ -16,7 +16,7 @@ class ExceptionHandlingMiddleware {
       return Response.notFound(jsonEncode(e.toJson()));
     } on UnauthorizedException {
       return Response.unauthorized(null);
-    } catch(e, stack) {
+    } catch (e, stack) {
       Sentry.captureException(e, stackTrace: stack).ignore();
       rethrow;
     }
