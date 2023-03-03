@@ -8,6 +8,7 @@ import 'package:mixology_backend/application/repos/mix_playlist.dart';
 import 'package:mixology_backend/application/repos/user.dart';
 import 'package:mixology_backend/interface/api/util.dart';
 import 'package:mutex/mutex.dart';
+import 'package:sentry/sentry.dart';
 import 'package:spotify_api/spotify_api.dart';
 
 @injectable
@@ -60,9 +61,20 @@ class MixPlaylists {
         try {
           final api = await _getApi(playlist.userId);
           await _mixPlaylist(api, playlist.id);
-        } catch (e) {
-          logger.e('Could not mix playlist ${playlist.id}', e);
-          continue;
+        } on SpotifyApiException catch (e, stack) {
+          logger.e(
+            'Could not mix playlist ${playlist.id} for user ${playlist.userId}',
+            e,
+            stack,
+          );
+          await Sentry.captureException(e, stackTrace: stack);
+
+          if (e is AuthorizationException || e is AuthenticationException) {
+            logger.i('Continuing due to likely permission/auth problems');
+            continue;
+          }
+
+          rethrow;
         }
 
         lastPlaylist = playlist;
