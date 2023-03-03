@@ -21,8 +21,7 @@ class _RunApi extends Command<void> {
 
   @override
   Future<void> run() async {
-    final MixologyApi api = initialize();
-    await api.serve();
+    await initialized((MixologyApi api) => api.serve());
   }
 }
 
@@ -35,8 +34,7 @@ class _Mix extends Command<void> {
 
   @override
   Future<void> run() async {
-    final app = initialize<Application>();
-    await app.mixPlaylists();
+    await initialized((Application app) => app.mixPlaylists());
   }
 }
 
@@ -49,7 +47,6 @@ class _CopyMix extends Command<void> {
 
   @override
   Future<void> run() async {
-    final app = initialize<Application>();
-    await app.mixCopyPlaylists();
+    await initialized((Application app) => app.mixCopyPlaylists());
   }
 }

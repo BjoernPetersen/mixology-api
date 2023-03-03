@@ -56,6 +56,7 @@ class Config {
   final String refreshTokenJwtKey;
   final String oauthJwtKey;
   final DatabaseConfig database;
+  final String? sentryDsn;
   final SpotifyAppConfig spotifyConfig;
 
   Config({
@@ -63,6 +64,7 @@ class Config {
     required this.refreshTokenJwtKey,
     required this.oauthJwtKey,
     required this.database,
+    required this.sentryDsn,
     required this.spotifyConfig,
   });
 
@@ -75,6 +77,7 @@ class Config {
       refreshTokenJwtKey: env['REFRESH_JWT_KEY']!,
       oauthJwtKey: env['OAUTH_JWT_KEY']!,
       database: DatabaseConfig.fromEnv(env),
+      sentryDsn: env['SENTRY_DSN'],
       spotifyConfig: SpotifyAppConfig.fromEnv(env),
     );
   }

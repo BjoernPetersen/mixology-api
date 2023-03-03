@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:mixology_backend/interface/api/util.dart';
+import 'package:sentry/sentry.dart';
 import 'package:shelf/shelf.dart';
 
 part 'exceptions.g.dart';
@@ -15,6 +16,9 @@ class ExceptionHandlingMiddleware {
       return Response.notFound(jsonEncode(e.toJson()));
     } on UnauthorizedException {
       return Response.unauthorized(null);
+    } catch(e, stack) {
+      Sentry.captureException(e, stackTrace: stack).ignore();
+      rethrow;
     }
   }
 
