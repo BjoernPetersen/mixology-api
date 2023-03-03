@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: mix-copy-playlists
 spec:
-  schedule: '*/30 * * * *'
+  schedule: '0 3 * * *'
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 8
   failedJobsHistoryLimit: 2
