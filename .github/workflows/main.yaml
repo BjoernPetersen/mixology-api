@@ -101,3 +101,15 @@ jobs:
           KUBECONFIG: ${{ secrets.KUBECONFIG_RAW }}
       - name: Upgrade helm installation
         run: helm upgrade api . --install --namespace=mixology --atomic
+      - name: Clean up old migrations container images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: mixology-api/migrations
+          package-type: container
+          min-versions-to-keep: 10
+      - name: Clean up old app container images
+        uses: actions/delete-package-versions@v4
+        with:
+          package-name: mixology-api/app
+          package-type: container
+          min-versions-to-keep: 10
