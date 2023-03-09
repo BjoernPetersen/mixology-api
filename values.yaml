@@ -12,6 +12,9 @@ postgres:
   user: mixer
   host: api-database
 
+sentry:
+  dsn: ${SENTRY_DSN}
+
 spotify:
   clientId: ${CLIENT_ID}
   clientSecret: ${CLIENT_SECRET}

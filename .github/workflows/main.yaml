@@ -92,6 +92,7 @@ jobs:
           MIGRATIONS_IMAGE_NAME: ghcr.io/bjoernpetersen/mixology-api/migrations:${{ github.sha }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           JWT_ACCESS: ${{ secrets.JWT_ACCESS }}
           JWT_OAUTH: ${{ secrets.JWT_OAUTH }}
           JWT_REFRESH: ${{ secrets.JWT_REFRESH }}
