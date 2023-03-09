@@ -18,6 +18,7 @@ Future<void> initialized<T extends Object>(
   if (sentryDsn != null) {
     await Sentry.init((options) {
       options.dsn = sentryDsn;
+      options.tracesSampleRate = 1.0;
     });
   }
 
