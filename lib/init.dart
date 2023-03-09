@@ -21,17 +21,10 @@ Future<void> initialized<T extends Object>(
     });
   }
 
-  final completer = Completer<void>();
-  await runZonedGuarded(
-    () async {
-      await withT(getIt());
-      completer.complete();
-    },
-    (error, stack) async {
-      completer.completeError(error, stack);
-      await Sentry.captureException(error, stackTrace: stack);
-    },
-  );
-
-  await completer.future;
+  try {
+    await withT(getIt());
+  } catch (e, stack) {
+    await Sentry.captureException(e, stackTrace: stack);
+    rethrow;
+  }
 }
