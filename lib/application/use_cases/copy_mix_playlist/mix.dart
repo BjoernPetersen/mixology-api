@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
+import 'package:mixology_backend/application/domain/copy_mix_playlist.dart';
 import 'package:mixology_backend/application/ports/spotify_api.dart';
 import 'package:mixology_backend/application/repos/copy_mix_playlist.dart';
 import 'package:mixology_backend/application/repos/user.dart';
@@ -46,42 +47,72 @@ class CopyMixPlaylists {
 
   Future<void> call() async {
     logger.i('Mixing playlists');
-    final playlists = await playlistRepo.listAll();
+
+    final transaction = Sentry.startTransaction(
+      'copy_mix_playlist.mix',
+      'task',
+    );
 
     try {
-      for (final playlist in playlists) {
-        final playlistName = playlist.sourceId ?? 'Saved Tracks';
-        logger.i(
-          'Now mixing playlist $playlistName for user ${playlist.userId}',
-        );
-
-        try {
-          final api = await _getApi(playlist.userId);
-          await _mixPlaylist(api, playlist.sourceId, playlist.targetId);
-        } on SpotifyApiException catch (e, stack) {
-          logger.e(
-            'Could not mix playlist $playlistName for user ${playlist.userId}',
-            e,
-            stack,
-          );
-          await Sentry.captureException(e, stackTrace: stack);
-
-          if (e is AuthorizationException ||
-              e is AuthenticationException ||
-              e is RefreshException) {
-            logger.i('Continuing due to likely permission/auth problems');
-            continue;
-          }
-
-          rethrow;
-        }
-      }
+      await _mixPlaylists(transaction);
+    } catch (e) {
+      transaction.throwable = e;
+      transaction.status = SpanStatus.internalError();
     } finally {
+      transaction.finish();
       for (final api in _clients.values) {
         api.close();
       }
     }
+
     logger.i('Done.');
+  }
+
+  Future<void> _mixPlaylists(ISentrySpan transaction) async {
+    final listAllSpan = transaction.startChild('listAll');
+    final List<CopyMixPlaylist> playlists;
+    try {
+      playlists = await playlistRepo.listAll();
+    } catch (e) {
+      transaction.throwable = e;
+      transaction.status = SpanStatus.internalError();
+      rethrow;
+    } finally {
+      listAllSpan.finish();
+    }
+
+    for (final playlist in playlists) {
+      final playlistName = playlist.sourceId ?? 'Saved Tracks';
+      final span = transaction.startChild(
+        'mixPlaylist',
+        description: 'Mixing $playlistName for ${playlist.userId}',
+      );
+      logger.i(
+        'Now mixing playlist $playlistName for user ${playlist.userId}',
+      );
+
+      try {
+        final api = await _getApi(playlist.userId);
+        await _mixPlaylist(api, playlist.sourceId, playlist.targetId);
+      } on SpotifyApiException catch (e) {
+        span.status = SpanStatus.internalError();
+        logger.e(
+          'Could not mix playlist $playlistName for user ${playlist.userId}',
+        );
+
+        if (e is AuthorizationException ||
+            e is AuthenticationException ||
+            e is RefreshException) {
+          logger.i('Continuing due to likely permission/auth problems');
+          span.status = SpanStatus.unauthenticated();
+          continue;
+        }
+
+        rethrow;
+      } finally {
+        span.finish();
+      }
+    }
   }
 
   Future<void> _mixPlaylist(
