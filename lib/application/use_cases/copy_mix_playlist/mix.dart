@@ -66,7 +66,9 @@ class CopyMixPlaylists {
           );
           await Sentry.captureException(e, stackTrace: stack);
 
-          if (e is AuthorizationException || e is AuthenticationException) {
+          if (e is AuthorizationException ||
+              e is AuthenticationException ||
+              e is RefreshException) {
             logger.i('Continuing due to likely permission/auth problems');
             continue;
           }
