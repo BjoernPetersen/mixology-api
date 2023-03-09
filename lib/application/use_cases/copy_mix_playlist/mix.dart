@@ -55,11 +55,12 @@ class CopyMixPlaylists {
 
     try {
       await _mixPlaylists(transaction);
-    } catch (e) {
+    } catch (e, stack) {
       transaction.throwable = e;
       transaction.status = SpanStatus.internalError();
+      await Sentry.captureException(e, stackTrace: stack);
     } finally {
-      transaction.finish();
+      await transaction.finish();
       for (final api in _clients.values) {
         api.close();
       }
@@ -78,7 +79,7 @@ class CopyMixPlaylists {
       transaction.status = SpanStatus.internalError();
       rethrow;
     } finally {
-      listAllSpan.finish();
+      await listAllSpan.finish();
     }
 
     for (final playlist in playlists) {
@@ -110,7 +111,7 @@ class CopyMixPlaylists {
 
         rethrow;
       } finally {
-        span.finish();
+        await span.finish();
       }
     }
   }
