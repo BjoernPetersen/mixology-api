@@ -64,8 +64,8 @@ class MixPlaylists {
         } on SpotifyApiException catch (e, stack) {
           logger.e(
             'Could not mix playlist ${playlist.id} for user ${playlist.userId}',
-            e,
-            stack,
+            error: e,
+            stackTrace: stack,
           );
           await Sentry.captureException(e, stackTrace: stack);
 
