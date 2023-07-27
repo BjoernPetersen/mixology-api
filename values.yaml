@@ -1,6 +1,6 @@
 image:
-  app: $APP_IMAGE_NAME
-  migrations: $MIGRATIONS_IMAGE_NAME
+  app: $APP_IMAGE_NAME:${GITHUB_SHA}
+  migrations: $MIGRATIONS_IMAGE_NAME:${GITHUB_SHA}
 
 jwt:
   access: ${JWT_ACCESS}
