@@ -7,16 +7,6 @@ metadata:
     cert-manager.io/issue-temporary-certificate: "false"
 spec:
   rules:
-    - host: api.mix.bembel.party
-      http:
-        paths:
-          - backend:
-              service:
-                name: api
-                port:
-                  name: http
-            path: /
-            pathType: Prefix
     - host: mix-api.bembel.party
       http:
         paths:
@@ -29,6 +19,5 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - api.mix.bembel.party
         - mix-api.bembel.party
       secretName: api-tls
