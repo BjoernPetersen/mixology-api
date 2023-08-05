@@ -28,7 +28,9 @@ jobs:
 
   build-app-image:
     runs-on: ubuntu-latest
-    needs: [ format-check, lint ]
+    needs:
+      - check-format
+      - lint
     if: success() && github.event_name == 'pull_request'
     steps:
       - name: Inject slug/short variables
