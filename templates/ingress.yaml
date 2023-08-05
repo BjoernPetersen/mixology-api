@@ -17,7 +17,18 @@ spec:
                   name: http
             path: /
             pathType: Prefix
+    - host: mix-api.bembel.party
+      http:
+        paths:
+          - backend:
+              service:
+                name: api
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
   tls:
     - hosts:
         - api.mix.bembel.party
+        - mix-api.bembel.party
       secretName: api-tls
