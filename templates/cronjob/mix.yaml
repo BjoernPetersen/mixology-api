@@ -8,6 +8,7 @@ spec:
   successfulJobsHistoryLimit: 8
   failedJobsHistoryLimit: 2
   startingDeadlineSeconds: 1200
+  timeZone: "Europe/Berlin"
   jobTemplate:
     spec:
       template:
