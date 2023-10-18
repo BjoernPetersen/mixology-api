@@ -21,6 +21,7 @@ linter:
     omit_local_variable_types: true
     prefer_single_quotes: true
     sort_pub_dependencies: true
+    implicit_call_tearoffs: false
 
 
 analyzer:
