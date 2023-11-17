@@ -49,10 +49,14 @@ class PostgresUnitOfWorkProvider implements UnitOfWorkProvider {
 
   @override
   Future<T> withUnitOfWork<T>(Future<T> Function(UnitOfWork) action) async {
-    return await _connectionPool.runTx(
-      (session) async {
-        final uow = PostgresUnitOfWork(session);
-        return await action(uow);
+    return await _connectionPool.withConnection(
+      (connection) async {
+        return await connection.runTx(
+          (session) async {
+            final uow = PostgresUnitOfWork(session);
+            return await action(uow);
+          },
+        );
       },
     );
   }
