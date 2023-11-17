@@ -56,4 +56,10 @@ class PostgresUnitOfWorkProvider implements UnitOfWorkProvider {
       },
     );
   }
+
+  @disposeMethod
+  @override
+  Future<void> dispose() async {
+    await _connectionPool.close();
+  }
 }

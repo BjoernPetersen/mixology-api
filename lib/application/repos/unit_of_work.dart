@@ -12,4 +12,5 @@ abstract interface class UnitOfWork {
 
 abstract interface class UnitOfWorkProvider {
   Future<T> withUnitOfWork<T>(Future<T> Function(UnitOfWork uow) action);
+  Future<void> dispose();
 }

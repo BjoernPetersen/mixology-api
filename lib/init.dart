@@ -27,6 +27,7 @@ Future<void> initialized<T extends Object>(
   } catch (e, stack) {
     await Sentry.captureException(e, stackTrace: stack);
   } finally {
+    await getIt.reset();
     await Sentry.close();
   }
 }
