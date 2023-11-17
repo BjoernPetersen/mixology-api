@@ -1,5 +1,6 @@
 import 'package:mixology_backend/application/domain/mix_playlist.dart';
 import 'package:mixology_backend/application/repos/mix_playlist.dart';
+import 'package:mixology_backend/infrastructure/repos/postgres_utils.dart';
 import 'package:postgres/postgres.dart';
 import 'package:sane_uuid/uuid.dart';
 
@@ -31,10 +32,10 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
 
   @override
   Future<List<MixPlaylist>> findByUserId(Uuid userId) async {
-    final rows = await _session.execute(
+    final rows = await _session.executePrepared(
       '''
         SELECT * FROM $tableName
-        WHERE $columnUserId = @userId;
+        WHERE $columnUserId = @userId:uuid;
         ''',
       parameters: {
         'userId': userId.toString(),
@@ -66,7 +67,7 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
 
   @override
   Future<void> insert(MixPlaylist playlist) async {
-    await _session.execute(
+    await _session.executePrepared(
       '''
         INSERT INTO $tableName(
           $columnId,
@@ -74,10 +75,10 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
           $columnName,
           $columnLastMix
         ) VALUES (
-          @id,
-          @userId,
-          @name,
-          @lastMix
+          @id:text,
+          @userId:uuid,
+          @name:text,
+          @lastMix:timestamptz
         ) ON CONFLICT DO NOTHING;
         ''',
       parameters: {
@@ -95,13 +96,13 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
     required String name,
     required DateTime lastMix,
   }) async {
-    await _session.execute(
+    await _session.executePrepared(
       '''
         UPDATE $tableName
         SET 
-          $columnName = @name,
-          $columnLastMix = @lastMix
-        WHERE $columnId = @id;
+          $columnName = @name:text,
+          $columnLastMix = @lastMix:timestamptz
+        WHERE $columnId = @id:text;
         ''',
       parameters: {
         'id': id,
@@ -116,10 +117,10 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
     required Uuid userId,
     required String playlistId,
   }) async {
-    await _session.execute(
+    await _session.executePrepared(
       '''
         DELETE FROM $tableName
-        WHERE $columnId = @id AND $columnUserId = @userId;
+        WHERE $columnId = @id:text AND $columnUserId = @userId:uuid;
         ''',
       parameters: {
         'id': playlistId,

@@ -1,5 +1,6 @@
 import 'package:mixology_backend/application/domain/copy_mix_playlist.dart';
 import 'package:mixology_backend/application/repos/copy_mix_playlist.dart';
+import 'package:mixology_backend/infrastructure/repos/postgres_utils.dart';
 import 'package:postgres/postgres.dart';
 import 'package:sane_uuid/uuid.dart';
 
@@ -31,10 +32,10 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
 
   @override
   Future<List<CopyMixPlaylist>> findByUserId(Uuid userId) async {
-    final rows = await session.execute(
+    final rows = await session.executePrepared(
       '''
         SELECT * FROM $tableName
-        WHERE $columnUserId = @userId;
+        WHERE $columnUserId = @userId:uuid;
         ''',
       parameters: {
         'userId': userId.toString(),
@@ -66,7 +67,7 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
 
   @override
   Future<void> insert(CopyMixPlaylist playlist) async {
-    await session.execute(
+    await session.executePrepared(
       '''
         INSERT INTO $tableName(
           $columnSourceId,
@@ -74,10 +75,10 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
           $columnUserId,
           $columnLastMix
         ) VALUES (
-          @sourceId,
-          @targetId,
-          @userId,
-          @lastMix
+          @sourceId:text,
+          @targetId:text,
+          @userId:uuid,
+          @lastMix:timestamptz
         ) ON CONFLICT DO NOTHING;
         ''',
       parameters: {
@@ -94,11 +95,11 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
     required String targetPlaylistId,
     required DateTime lastMix,
   }) async {
-    await session.execute(
+    await session.executePrepared(
       '''
         UPDATE $tableName
-        SET $columnLastMix = @lastMix
-        WHERE $columnTargetId = @id;
+        SET $columnLastMix = @lastMix:timestamptz
+        WHERE $columnTargetId = @id:text;
         ''',
       parameters: {
         'id': targetPlaylistId,
@@ -112,10 +113,10 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
     required Uuid userId,
     required String targetPlaylistId,
   }) async {
-    await session.execute(
+    await session.executePrepared(
       '''
         DELETE FROM $tableName
-        WHERE $columnTargetId = @id AND $columnUserId = @userId;
+        WHERE $columnTargetId = @id:text AND $columnUserId = @userId:uuid;
         ''',
       parameters: {
         'id': targetPlaylistId,
