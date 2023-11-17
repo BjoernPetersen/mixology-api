@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:mixology_backend/application/app.dart';
 import 'package:mixology_backend/interface/api/account.dart';
 import 'package:mixology_backend/interface/api/auth.dart';
@@ -10,16 +11,20 @@ import 'package:mixology_backend/interface/api/cors.dart';
 import 'package:mixology_backend/interface/api/exceptions.dart';
 import 'package:mixology_backend/interface/api/mix_playlist.dart';
 import 'package:mixology_backend/interface/api/spotify.dart';
+import 'package:mutex/mutex.dart';
+import 'package:sentry/sentry.dart';
 import 'package:shelf_plus/shelf_plus.dart';
 
 @injectable
 class MixologyApi {
   final Application app;
   final AuthMiddleware authMiddleware;
+  final Logger _logger;
   final RouterPlus _router;
 
   MixologyApi(
     this.app,
+    this._logger,
     this.authMiddleware,
   ) : _router = Router().plus {
     _router.use(ExceptionHandlingMiddleware());
@@ -83,9 +88,41 @@ class MixologyApi {
   }
 
   Future<void> serve() async {
-    await shelfRun(
+    final server = await shelfRun(
       () => corsMiddleware().addHandler(_router),
       defaultBindAddress: InternetAddress.anyIPv4,
     );
+
+    final stopLock = Mutex();
+    await stopLock.acquire();
+
+    final signals = [
+      ProcessSignal.sigterm,
+      ProcessSignal.sigint,
+    ];
+    late Future<void> Function() close;
+    final subs = signals.map((signal) {
+      return signal.watch().listen((event) async {
+        _logger.i('Shutting down because of signal ${event.name}');
+        await close();
+      });
+    }).toList(growable: false);
+
+    close = () async {
+      try {
+        await server.close();
+        _logger.i('Closed server, now cancelling subscriptions');
+        for (final sub in subs) {
+          await sub.cancel();
+        }
+      } catch (e, stackTrace) {
+        await Sentry.captureException(e, stackTrace: stackTrace);
+      } finally {
+        _logger.i('API is shut down.');
+        stopLock.release();
+      }
+    };
+
+    await stopLock.acquire();
   }
 }
