@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:mixology_backend/application/repos/copy_mix_playlist.dart';
 import 'package:mixology_backend/application/repos/mix_playlist.dart';
 import 'package:mixology_backend/application/repos/unit_of_work.dart';
@@ -29,9 +30,10 @@ class PostgresUnitOfWork implements UnitOfWork {
 @prod
 @Singleton(as: UnitOfWorkProvider)
 class PostgresUnitOfWorkProvider implements UnitOfWorkProvider {
+  final Logger _logger;
   final Pool<void> _connectionPool;
 
-  PostgresUnitOfWorkProvider(Config config)
+  PostgresUnitOfWorkProvider(this._logger, Config config)
       : _connectionPool = Pool.withEndpoints(
           [
             Endpoint(
@@ -65,5 +67,6 @@ class PostgresUnitOfWorkProvider implements UnitOfWorkProvider {
   @override
   Future<void> dispose() async {
     await _connectionPool.close();
+    _logger.i('Closed PostgresUnitOfWorkProvider');
   }
 }
