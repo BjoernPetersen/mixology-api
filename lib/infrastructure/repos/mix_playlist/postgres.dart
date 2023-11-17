@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mixology_backend/application/domain/mix_playlist.dart';
 import 'package:mixology_backend/application/repos/mix_playlist.dart';
 import 'package:mixology_backend/config.dart';
+import 'package:mixology_backend/infrastructure/repos/postgres_mixin.dart';
 import 'package:postgres/postgres.dart';
 import 'package:sane_uuid/uuid.dart';
 
@@ -12,16 +13,20 @@ const columnName = 'name';
 const columnLastMix = 'last_mix';
 
 @Injectable(as: MixPlaylistRepository)
-class PostgresMixPlaylistRepository implements MixPlaylistRepository {
-  final DatabaseConfig _config;
+class PostgresMixPlaylistRepository
+    with PostgresMixin
+    implements MixPlaylistRepository {
+  @override
+  final DatabaseConfig config;
 
-  PostgresMixPlaylistRepository(Config config) : _config = config.database;
+  PostgresMixPlaylistRepository(Config config) : config = config.database;
 
-  MixPlaylist _mixPlaylistFromRow(Map<String, dynamic> row) {
-    final id = row[columnId];
-    final userId = Uuid.fromString(row[columnUserId]);
-    final name = row[columnName];
-    final lastMixTimestamp = row[columnLastMix];
+  MixPlaylist _mixPlaylistFromRow(ResultRow row) {
+    final columns = row.toColumnMap();
+    final id = columns[columnId];
+    final userId = Uuid.fromString(columns[columnUserId]);
+    final name = columns[columnName];
+    final lastMixTimestamp = columns[columnLastMix];
 
     return MixPlaylist(
       id: id,
@@ -31,34 +36,15 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
     );
   }
 
-  Future<T> useConnection<T>(
-    Future<T> Function(PostgreSQLConnection db) action,
-  ) async {
-    final connection = PostgreSQLConnection(
-      _config.host,
-      _config.port,
-      _config.dbName,
-      username: _config.user,
-      password: _config.password,
-      useSSL: _config.useTls,
-    );
-    await connection.open();
-    try {
-      return await action(connection);
-    } finally {
-      connection.close();
-    }
-  }
-
   @override
   Future<List<MixPlaylist>> findByUserId(Uuid userId) {
-    return useConnection((db) async {
-      final rows = await db.mappedResultsQuery(
+    return withSession((session) async {
+      final rows = await session.execute(
         '''
         SELECT * FROM $tableName
         WHERE $columnUserId = @userId;
         ''',
-        substitutionValues: {
+        parameters: {
           'userId': userId.toString(),
         },
       );
@@ -67,16 +53,14 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
         return [];
       }
 
-      return rows
-          .map((e) => _mixPlaylistFromRow(e[tableName]!))
-          .toList(growable: false);
+      return rows.map(_mixPlaylistFromRow).toList(growable: false);
     });
   }
 
   @override
   Future<List<MixPlaylist>> listAll() {
-    return useConnection((db) async {
-      final rows = await db.mappedResultsQuery(
+    return withSession((session) async {
+      final rows = await session.execute(
         '''
         SELECT * FROM $tableName
         ORDER BY $columnId;
@@ -87,16 +71,14 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
         return [];
       }
 
-      return rows
-          .map((e) => _mixPlaylistFromRow(e[tableName]!))
-          .toList(growable: false);
+      return rows.map(_mixPlaylistFromRow).toList(growable: false);
     });
   }
 
   @override
   Future<void> insert(MixPlaylist playlist) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         INSERT INTO $tableName(
           $columnId,
@@ -110,7 +92,7 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
           @lastMix
         ) ON CONFLICT DO NOTHING;
         ''',
-        substitutionValues: {
+        parameters: {
           'id': playlist.id,
           'userId': playlist.userId.toString(),
           'name': playlist.name,
@@ -126,8 +108,8 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
     required String name,
     required DateTime lastMix,
   }) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         UPDATE $tableName
         SET 
@@ -135,7 +117,7 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
           $columnLastMix = @lastMix
         WHERE $columnId = @id;
         ''',
-        substitutionValues: {
+        parameters: {
           'id': id,
           'name': name,
           'lastMix': lastMix,
@@ -149,13 +131,13 @@ class PostgresMixPlaylistRepository implements MixPlaylistRepository {
     required Uuid userId,
     required String playlistId,
   }) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         DELETE FROM $tableName
         WHERE $columnId = @id AND $columnUserId = @userId;
         ''',
-        substitutionValues: {
+        parameters: {
           'id': playlistId,
           'userId': userId.toString(),
         },
