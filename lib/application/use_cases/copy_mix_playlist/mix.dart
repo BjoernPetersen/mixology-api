@@ -43,36 +43,36 @@ class CopyMixPlaylists {
   }
 
   Future<void> call() async {
-    await uowProvider.withUnitOfWork((uow) async {
-      logger.i('Mixing playlists');
+    logger.i('Mixing playlists');
 
-      final transaction = Sentry.startTransaction(
-        'copy_mix_playlist.mix',
-        'task',
-      );
+    final transaction = Sentry.startTransaction(
+      'copy_mix_playlist.mix',
+      'task',
+    );
 
-      try {
-        await _mixPlaylists(uow, transaction);
-      } catch (e, stack) {
-        transaction.throwable = e;
-        transaction.status = SpanStatus.internalError();
-        await Sentry.captureException(e, stackTrace: stack);
-      } finally {
-        await transaction.finish();
-        for (final api in _clients.values) {
-          api.close();
-        }
+    try {
+      await _mixPlaylists(transaction);
+    } catch (e, stack) {
+      transaction.throwable = e;
+      transaction.status = SpanStatus.internalError();
+      await Sentry.captureException(e, stackTrace: stack);
+    } finally {
+      await transaction.finish();
+      for (final api in _clients.values) {
+        api.close();
       }
+    }
 
-      logger.i('Done.');
-    });
+    logger.i('Done.');
   }
 
-  Future<void> _mixPlaylists(UnitOfWork uow, ISentrySpan transaction) async {
+  Future<void> _mixPlaylists(ISentrySpan transaction) async {
     final listAllSpan = transaction.startChild('listAll');
     final List<CopyMixPlaylist> playlists;
     try {
-      playlists = await uow.copyMixPlaylistRepo.listAll();
+      playlists = await uowProvider.withUnitOfWork((uow) async {
+        return await uow.copyMixPlaylistRepo.listAll();
+      });
     } catch (e) {
       transaction.throwable = e;
       transaction.status = SpanStatus.internalError();

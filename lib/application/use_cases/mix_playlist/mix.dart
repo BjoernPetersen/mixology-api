@@ -42,48 +42,48 @@ class MixPlaylists {
   }
 
   Future<void> call() async {
-    await uowProvider.withUnitOfWork((uow) async {
-      logger.i('Mixing playlists');
-      final playlists = await uow.mixPlaylistRepo.listAll();
-
-      try {
-        MixPlaylist? lastPlaylist;
-        for (final playlist in playlists) {
-          logger.i('Now mixing playlist ${playlist.id}');
-
-          if (playlist.id == lastPlaylist?.id) {
-            logger.i('Skipping duplicate playlist ${playlist.id}');
-            continue;
-          }
-
-          await uowProvider.withUnitOfWork((uow) async {
-            try {
-              final api = await _getApi(uow, playlist.userId);
-              await _mixPlaylist(uow, api, playlist.id);
-              lastPlaylist = playlist;
-            } on SpotifyApiException catch (e, stack) {
-              logger.e(
-                'Could not mix playlist ${playlist.id} for user ${playlist.userId}',
-                error: e,
-                stackTrace: stack,
-              );
-              await Sentry.captureException(e, stackTrace: stack);
-
-              if (e is AuthorizationException || e is AuthenticationException) {
-                logger.i('Continuing due to likely permission/auth problems');
-              } else {
-                rethrow;
-              }
-            }
-          });
-        }
-      } finally {
-        for (final api in _clients.values) {
-          api.close();
-        }
-      }
-      logger.i('Done.');
+    logger.i('Mixing playlists');
+    final playlists = await uowProvider.withUnitOfWork((uow) async {
+      return await uow.mixPlaylistRepo.listAll();
     });
+
+    try {
+      MixPlaylist? lastPlaylist;
+      for (final playlist in playlists) {
+        logger.i('Now mixing playlist ${playlist.id}');
+
+        if (playlist.id == lastPlaylist?.id) {
+          logger.i('Skipping duplicate playlist ${playlist.id}');
+          continue;
+        }
+
+        await uowProvider.withUnitOfWork((uow) async {
+          try {
+            final api = await _getApi(uow, playlist.userId);
+            await _mixPlaylist(uow, api, playlist.id);
+            lastPlaylist = playlist;
+          } on SpotifyApiException catch (e, stack) {
+            logger.e(
+              'Could not mix playlist ${playlist.id} for user ${playlist.userId}',
+              error: e,
+              stackTrace: stack,
+            );
+            await Sentry.captureException(e, stackTrace: stack);
+
+            if (e is AuthorizationException || e is AuthenticationException) {
+              logger.i('Continuing due to likely permission/auth problems');
+            } else {
+              rethrow;
+            }
+          }
+        });
+      }
+    } finally {
+      for (final api in _clients.values) {
+        api.close();
+      }
+    }
+    logger.i('Done.');
   }
 
   Future<void> _mixPlaylist(
