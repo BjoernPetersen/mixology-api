@@ -17,6 +17,7 @@ spec:
       labels:
         app: api
     spec:
+      terminationGracePeriodSeconds: 2
       initContainers:
         - name: migrations
           image: {{ .Values.image.migrations }}
