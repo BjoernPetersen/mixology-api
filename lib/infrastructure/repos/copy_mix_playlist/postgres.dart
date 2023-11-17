@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mixology_backend/application/domain/copy_mix_playlist.dart';
 import 'package:mixology_backend/application/repos/copy_mix_playlist.dart';
 import 'package:mixology_backend/config.dart';
+import 'package:mixology_backend/infrastructure/repos/postgres_mixin.dart';
 import 'package:postgres/postgres.dart';
 import 'package:sane_uuid/uuid.dart';
 
@@ -12,16 +13,20 @@ const columnUserId = 'user_id';
 const columnLastMix = 'last_mix';
 
 @Injectable(as: CopyMixPlaylistRepository)
-class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
-  final DatabaseConfig _config;
+class PostgresCopyMixPlaylistRepository
+    with PostgresMixin
+    implements CopyMixPlaylistRepository {
+  @override
+  final DatabaseConfig config;
 
-  PostgresCopyMixPlaylistRepository(Config config) : _config = config.database;
+  PostgresCopyMixPlaylistRepository(Config config) : config = config.database;
 
-  CopyMixPlaylist _mixPlaylistFromRow(Map<String, dynamic> row) {
-    final sourceId = row[columnSourceId];
-    final targetId = row[columnTargetId];
-    final userId = Uuid.fromString(row[columnUserId]);
-    final lastMixTimestamp = row[columnLastMix];
+  CopyMixPlaylist _mixPlaylistFromRow(ResultRow row) {
+    final columns = row.toColumnMap();
+    final sourceId = columns[columnSourceId];
+    final targetId = columns[columnTargetId];
+    final userId = Uuid.fromString(columns[columnUserId]);
+    final lastMixTimestamp = columns[columnLastMix];
 
     return CopyMixPlaylist(
       sourceId: sourceId,
@@ -31,34 +36,15 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
     );
   }
 
-  Future<T> useConnection<T>(
-    Future<T> Function(PostgreSQLConnection db) action,
-  ) async {
-    final connection = PostgreSQLConnection(
-      _config.host,
-      _config.port,
-      _config.dbName,
-      username: _config.user,
-      password: _config.password,
-      useSSL: _config.useTls,
-    );
-    await connection.open();
-    try {
-      return await action(connection);
-    } finally {
-      connection.close();
-    }
-  }
-
   @override
   Future<List<CopyMixPlaylist>> findByUserId(Uuid userId) {
-    return useConnection((db) async {
-      final rows = await db.mappedResultsQuery(
+    return withSession((session) async {
+      final rows = await session.execute(
         '''
         SELECT * FROM $tableName
         WHERE $columnUserId = @userId;
         ''',
-        substitutionValues: {
+        parameters: {
           'userId': userId.toString(),
         },
       );
@@ -67,16 +53,14 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
         return [];
       }
 
-      return rows
-          .map((e) => _mixPlaylistFromRow(e[tableName]!))
-          .toList(growable: false);
+      return rows.map(_mixPlaylistFromRow).toList(growable: false);
     });
   }
 
   @override
   Future<List<CopyMixPlaylist>> listAll() {
-    return useConnection((db) async {
-      final rows = await db.mappedResultsQuery(
+    return withSession((session) async {
+      final rows = await session.execute(
         '''
         SELECT * FROM $tableName
         ORDER BY $columnSourceId;
@@ -87,16 +71,14 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
         return [];
       }
 
-      return rows
-          .map((e) => _mixPlaylistFromRow(e[tableName]!))
-          .toList(growable: false);
+      return rows.map(_mixPlaylistFromRow).toList(growable: false);
     });
   }
 
   @override
   Future<void> insert(CopyMixPlaylist playlist) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         INSERT INTO $tableName(
           $columnSourceId,
@@ -110,7 +92,7 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
           @lastMix
         ) ON CONFLICT DO NOTHING;
         ''',
-        substitutionValues: {
+        parameters: {
           'sourceId': playlist.sourceId,
           'targetId': playlist.targetId,
           'userId': playlist.userId.toString(),
@@ -125,14 +107,14 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
     required String targetPlaylistId,
     required DateTime lastMix,
   }) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         UPDATE $tableName
         SET $columnLastMix = @lastMix
         WHERE $columnTargetId = @id;
         ''',
-        substitutionValues: {
+        parameters: {
           'id': targetPlaylistId,
           'lastMix': lastMix,
         },
@@ -145,13 +127,13 @@ class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
     required Uuid userId,
     required String targetPlaylistId,
   }) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         DELETE FROM $tableName
         WHERE $columnTargetId = @id AND $columnUserId = @userId;
         ''',
-        substitutionValues: {
+        parameters: {
           'id': targetPlaylistId,
           'userId': userId.toString(),
         },

@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:mixology_backend/application/domain/user.dart';
 import 'package:mixology_backend/application/repos/user.dart';
 import 'package:mixology_backend/config.dart';
+import 'package:mixology_backend/infrastructure/repos/postgres_mixin.dart';
 import 'package:postgres/postgres.dart';
 import 'package:sane_uuid/uuid.dart';
 
@@ -14,16 +15,18 @@ const columnSpotifyRefreshToken = 'spotify_refresh_token';
 @dev
 @prod
 @Injectable(as: UserRepository)
-class PostgresUserRepository implements UserRepository {
-  final DatabaseConfig _config;
+class PostgresUserRepository with PostgresMixin implements UserRepository {
+  @override
+  final DatabaseConfig config;
 
-  PostgresUserRepository(Config config) : _config = config.database;
+  PostgresUserRepository(Config config) : config = config.database;
 
-  User<Uuid> _userFromRow(Map<String, dynamic> row) {
-    final id = row[columnId];
-    final spotifyId = row[columnSpotifyId];
-    final name = row[columnName];
-    final spotifyRefreshToken = row[columnSpotifyRefreshToken];
+  User<Uuid> _userFromRow(ResultRow row) {
+    final columns = row.toColumnMap();
+    final id = columns[columnId];
+    final spotifyId = columns[columnSpotifyId];
+    final name = columns[columnName];
+    final spotifyRefreshToken = columns[columnSpotifyRefreshToken];
 
     return User(
       id: Uuid.fromString(id),
@@ -33,66 +36,53 @@ class PostgresUserRepository implements UserRepository {
     );
   }
 
-  Future<T> useConnection<T>(
-    Future<T> Function(PostgreSQLConnection db) action,
-  ) async {
-    final connection = PostgreSQLConnection(
-      _config.host,
-      _config.port,
-      _config.dbName,
-      username: _config.user,
-      password: _config.password,
-      useSSL: _config.useTls,
-    );
-    await connection.open();
-    try {
-      return await action(connection);
-    } finally {
-      connection.close();
-    }
-  }
-
   @override
   Future<User<Uuid>?> findById(Uuid userId) {
-    return useConnection((db) async {
-      final rows = await db.mappedResultsQuery('''
+    return withSession((session) async {
+      final rows = await session.execute(
+        '''
         SELECT * FROM $tableName
         WHERE $columnId = @userId;
-        ''', substitutionValues: {
-        'userId': userId.toString(),
-      });
+        ''',
+        parameters: {
+          'userId': userId.toString(),
+        },
+      );
 
       if (rows.isEmpty) {
         return null;
       }
 
-      return _userFromRow(rows.single[tableName]!);
+      return _userFromRow(rows.single);
     });
   }
 
   @override
   Future<User<Uuid>?> findBySpotifyId(String spotifyId) {
-    return useConnection((db) async {
-      final rows = await db.mappedResultsQuery('''
+    return withSession((session) async {
+      final rows = await session.execute(
+        '''
         SELECT * FROM $tableName
         WHERE $columnSpotifyId = @spotifyId;
-        ''', substitutionValues: {
-        'spotifyId': spotifyId,
-      });
+        ''',
+        parameters: {
+          'spotifyId': spotifyId,
+        },
+      );
 
       if (rows.isEmpty) {
         return null;
       }
 
-      return _userFromRow(rows.single[tableName]!);
+      return _userFromRow(rows.single);
     });
   }
 
   @override
   Future<User<Uuid>> insertUser(User<void> user) async {
     final userId = Uuid.v4();
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         INSERT INTO $tableName(
           $columnId,
@@ -106,7 +96,7 @@ class PostgresUserRepository implements UserRepository {
           @spotifyRefreshToken
         );
         ''',
-        substitutionValues: {
+        parameters: {
           'userId': userId.toString(),
           'spotifyId': user.spotifyId,
           'name': user.name,
@@ -119,8 +109,8 @@ class PostgresUserRepository implements UserRepository {
 
   @override
   Future<void> updateUser(User<Uuid> user) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         UPDATE $tableName
         SET 
@@ -129,7 +119,7 @@ class PostgresUserRepository implements UserRepository {
           $columnSpotifyRefreshToken = @spotifyRefreshToken
         WHERE $columnId = @userId;
         ''',
-        substitutionValues: {
+        parameters: {
           'userId': user.id.toString(),
           'spotifyId': user.spotifyId,
           'name': user.name,
@@ -141,13 +131,13 @@ class PostgresUserRepository implements UserRepository {
 
   @override
   Future<void> deleteUser(Uuid userId) async {
-    await useConnection((db) async {
-      await db.execute(
+    await withSession((session) async {
+      await session.execute(
         '''
         DELETE FROM $tableName
         WHERE $columnId = @userId;
         ''',
-        substitutionValues: {
+        parameters: {
           'userId': userId.toString(),
         },
       );
