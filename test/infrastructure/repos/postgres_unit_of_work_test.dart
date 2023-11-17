@@ -1,5 +1,4 @@
 import 'package:mixology_backend/application/repos/unit_of_work.dart';
-import 'package:mixology_backend/application/repos/user.dart';
 import 'package:mixology_backend/config.dart';
 import 'package:mixology_backend/infrastructure/repos/postgres_unit_of_work.dart';
 import 'package:mixology_backend/interface/api/util.dart';
