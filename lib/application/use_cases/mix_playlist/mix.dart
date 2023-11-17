@@ -56,7 +56,7 @@ class MixPlaylists {
             continue;
           }
 
-          uowProvider.withUnitOfWork((uow) async {
+          await uowProvider.withUnitOfWork((uow) async {
             try {
               final api = await _getApi(uow, playlist.userId);
               await _mixPlaylist(uow, api, playlist.id);
