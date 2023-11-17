@@ -15,7 +15,7 @@ dependencies:
   logger: ^2.0.0
   meta: ^1.0.0
   mutex: ^3.0.1
-  postgres: ^2.0.0
+  postgres: ^3.0.0
   quiver: ^3.2.1
   sane_uuid: ^1.0.0-alpha.4
   sentry: ^7.0.0
