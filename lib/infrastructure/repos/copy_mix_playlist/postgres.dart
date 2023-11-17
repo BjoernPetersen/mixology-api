@@ -1,8 +1,5 @@
-import 'package:injectable/injectable.dart';
 import 'package:mixology_backend/application/domain/copy_mix_playlist.dart';
 import 'package:mixology_backend/application/repos/copy_mix_playlist.dart';
-import 'package:mixology_backend/config.dart';
-import 'package:mixology_backend/infrastructure/repos/postgres_mixin.dart';
 import 'package:postgres/postgres.dart';
 import 'package:sane_uuid/uuid.dart';
 
@@ -12,14 +9,10 @@ const columnTargetId = 'target_id';
 const columnUserId = 'user_id';
 const columnLastMix = 'last_mix';
 
-@Injectable(as: CopyMixPlaylistRepository)
-class PostgresCopyMixPlaylistRepository
-    with PostgresMixin
-    implements CopyMixPlaylistRepository {
-  @override
-  final DatabaseConfig config;
+class PostgresCopyMixPlaylistRepository implements CopyMixPlaylistRepository {
+  final Session session;
 
-  PostgresCopyMixPlaylistRepository(Config config) : config = config.database;
+  PostgresCopyMixPlaylistRepository(this.session);
 
   CopyMixPlaylist _mixPlaylistFromRow(ResultRow row) {
     final columns = row.toColumnMap();
@@ -37,49 +30,44 @@ class PostgresCopyMixPlaylistRepository
   }
 
   @override
-  Future<List<CopyMixPlaylist>> findByUserId(Uuid userId) {
-    return withSession((session) async {
-      final rows = await session.execute(
-        '''
+  Future<List<CopyMixPlaylist>> findByUserId(Uuid userId) async {
+    final rows = await session.execute(
+      '''
         SELECT * FROM $tableName
         WHERE $columnUserId = @userId;
         ''',
-        parameters: {
-          'userId': userId.toString(),
-        },
-      );
+      parameters: {
+        'userId': userId.toString(),
+      },
+    );
 
-      if (rows.isEmpty) {
-        return [];
-      }
+    if (rows.isEmpty) {
+      return [];
+    }
 
-      return rows.map(_mixPlaylistFromRow).toList(growable: false);
-    });
+    return rows.map(_mixPlaylistFromRow).toList(growable: false);
   }
 
   @override
-  Future<List<CopyMixPlaylist>> listAll() {
-    return withSession((session) async {
-      final rows = await session.execute(
-        '''
+  Future<List<CopyMixPlaylist>> listAll() async {
+    final rows = await session.execute(
+      '''
         SELECT * FROM $tableName
         ORDER BY $columnSourceId;
         ''',
-      );
+    );
 
-      if (rows.isEmpty) {
-        return [];
-      }
+    if (rows.isEmpty) {
+      return [];
+    }
 
-      return rows.map(_mixPlaylistFromRow).toList(growable: false);
-    });
+    return rows.map(_mixPlaylistFromRow).toList(growable: false);
   }
 
   @override
   Future<void> insert(CopyMixPlaylist playlist) async {
-    await withSession((session) async {
-      await session.execute(
-        '''
+    await session.execute(
+      '''
         INSERT INTO $tableName(
           $columnSourceId,
           $columnTargetId,
@@ -92,14 +80,13 @@ class PostgresCopyMixPlaylistRepository
           @lastMix
         ) ON CONFLICT DO NOTHING;
         ''',
-        parameters: {
-          'sourceId': playlist.sourceId,
-          'targetId': playlist.targetId,
-          'userId': playlist.userId.toString(),
-          'lastMix': playlist.lastMix,
-        },
-      );
-    });
+      parameters: {
+        'sourceId': playlist.sourceId,
+        'targetId': playlist.targetId,
+        'userId': playlist.userId.toString(),
+        'lastMix': playlist.lastMix,
+      },
+    );
   }
 
   @override
@@ -107,19 +94,17 @@ class PostgresCopyMixPlaylistRepository
     required String targetPlaylistId,
     required DateTime lastMix,
   }) async {
-    await withSession((session) async {
-      await session.execute(
-        '''
+    await session.execute(
+      '''
         UPDATE $tableName
         SET $columnLastMix = @lastMix
         WHERE $columnTargetId = @id;
         ''',
-        parameters: {
-          'id': targetPlaylistId,
-          'lastMix': lastMix,
-        },
-      );
-    });
+      parameters: {
+        'id': targetPlaylistId,
+        'lastMix': lastMix,
+      },
+    );
   }
 
   @override
@@ -127,17 +112,15 @@ class PostgresCopyMixPlaylistRepository
     required Uuid userId,
     required String targetPlaylistId,
   }) async {
-    await withSession((session) async {
-      await session.execute(
-        '''
+    await session.execute(
+      '''
         DELETE FROM $tableName
         WHERE $columnTargetId = @id AND $columnUserId = @userId;
         ''',
-        parameters: {
-          'id': targetPlaylistId,
-          'userId': userId.toString(),
-        },
-      );
-    });
+      parameters: {
+        'id': targetPlaylistId,
+        'userId': userId.toString(),
+      },
+    );
   }
 }

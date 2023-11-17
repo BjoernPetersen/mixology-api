@@ -4,8 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:mixology_backend/application/domain/copy_mix_playlist.dart';
 import 'package:mixology_backend/application/ports/spotify_api.dart';
-import 'package:mixology_backend/application/repos/copy_mix_playlist.dart';
-import 'package:mixology_backend/application/repos/user.dart';
+import 'package:mixology_backend/application/repos/unit_of_work.dart';
 import 'package:mutex/mutex.dart';
 import 'package:quiver/iterables.dart';
 import 'package:sane_uuid/uuid.dart';
@@ -15,25 +14,23 @@ import 'package:spotify_api/spotify_api.dart';
 @injectable
 class CopyMixPlaylists {
   final Logger logger;
-  final CopyMixPlaylistRepository playlistRepo;
-  final UserRepository userRepo;
   final SpotifyApiProvider apiProvider;
   final Mutex _mutex;
   final Map<Uuid, SpotifyWebApi> _clients;
+  final UnitOfWorkProvider uowProvider;
 
   CopyMixPlaylists(
     this.apiProvider,
-    this.playlistRepo,
-    this.userRepo,
+    this.uowProvider,
     this.logger,
   )   : _mutex = Mutex(),
         _clients = {};
 
-  Future<SpotifyWebApi> _getApi(Uuid userId) async {
+  Future<SpotifyWebApi> _getApi(UnitOfWork uow, Uuid userId) async {
     return _mutex.protect(() async {
       var client = _clients[userId];
       if (client == null) {
-        final user = await userRepo.findById(userId);
+        final user = await uow.userRepo.findById(userId);
         if (user == null) {
           throw ArgumentError.value(userId, 'userId', 'unknown user');
         }
@@ -46,34 +43,36 @@ class CopyMixPlaylists {
   }
 
   Future<void> call() async {
-    logger.i('Mixing playlists');
+    await uowProvider.withUnitOfWork((uow) async {
+      logger.i('Mixing playlists');
 
-    final transaction = Sentry.startTransaction(
-      'copy_mix_playlist.mix',
-      'task',
-    );
+      final transaction = Sentry.startTransaction(
+        'copy_mix_playlist.mix',
+        'task',
+      );
 
-    try {
-      await _mixPlaylists(transaction);
-    } catch (e, stack) {
-      transaction.throwable = e;
-      transaction.status = SpanStatus.internalError();
-      await Sentry.captureException(e, stackTrace: stack);
-    } finally {
-      await transaction.finish();
-      for (final api in _clients.values) {
-        api.close();
+      try {
+        await _mixPlaylists(uow, transaction);
+      } catch (e, stack) {
+        transaction.throwable = e;
+        transaction.status = SpanStatus.internalError();
+        await Sentry.captureException(e, stackTrace: stack);
+      } finally {
+        await transaction.finish();
+        for (final api in _clients.values) {
+          api.close();
+        }
       }
-    }
 
-    logger.i('Done.');
+      logger.i('Done.');
+    });
   }
 
-  Future<void> _mixPlaylists(ISentrySpan transaction) async {
+  Future<void> _mixPlaylists(UnitOfWork uow, ISentrySpan transaction) async {
     final listAllSpan = transaction.startChild('listAll');
     final List<CopyMixPlaylist> playlists;
     try {
-      playlists = await playlistRepo.listAll();
+      playlists = await uow.copyMixPlaylistRepo.listAll();
     } catch (e) {
       transaction.throwable = e;
       transaction.status = SpanStatus.internalError();
@@ -83,40 +82,42 @@ class CopyMixPlaylists {
     }
 
     for (final playlist in playlists) {
-      final playlistName = playlist.sourceId ?? 'Saved Tracks';
-      final span = transaction.startChild(
-        'mixPlaylist',
-        description: 'Mixing $playlistName for ${playlist.userId}',
-      );
-      logger.i(
-        'Now mixing playlist $playlistName for user ${playlist.userId}',
-      );
-
-      try {
-        final api = await _getApi(playlist.userId);
-        await _mixPlaylist(api, playlist.sourceId, playlist.targetId);
-      } on SpotifyApiException catch (e) {
-        span.status = SpanStatus.internalError();
-        logger.e(
-          'Could not mix playlist $playlistName for user ${playlist.userId}',
+      await uowProvider.withUnitOfWork((uow) async {
+        final playlistName = playlist.sourceId ?? 'Saved Tracks';
+        final span = transaction.startChild(
+          'mixPlaylist',
+          description: 'Mixing $playlistName for ${playlist.userId}',
+        );
+        logger.i(
+          'Now mixing playlist $playlistName for user ${playlist.userId}',
         );
 
-        if (e is AuthorizationException ||
-            e is AuthenticationException ||
-            e is RefreshException) {
-          logger.i('Continuing due to likely permission/auth problems');
-          span.status = SpanStatus.unauthenticated();
-          continue;
-        }
+        try {
+          final api = await _getApi(uow, playlist.userId);
+          await _mixPlaylist(uow, api, playlist.sourceId, playlist.targetId);
+        } on SpotifyApiException catch (e) {
+          span.status = SpanStatus.internalError();
+          logger.e(
+            'Could not mix playlist $playlistName for user ${playlist.userId}',
+          );
 
-        rethrow;
-      } finally {
-        await span.finish();
-      }
+          if (e is AuthorizationException ||
+              e is AuthenticationException ||
+              e is RefreshException) {
+            logger.i('Continuing due to likely permission/auth problems');
+            span.status = SpanStatus.unauthenticated();
+          } else {
+            rethrow;
+          }
+        } finally {
+          await span.finish();
+        }
+      });
     }
   }
 
   Future<void> _mixPlaylist(
+    UnitOfWork uow,
     SpotifyWebApi api,
     String? sourceId,
     String targetId,
@@ -146,7 +147,7 @@ class CopyMixPlaylists {
       );
     }
 
-    await playlistRepo.update(
+    await uow.copyMixPlaylistRepo.update(
       targetPlaylistId: targetId,
       lastMix: DateTime.now().toUtc(),
     );

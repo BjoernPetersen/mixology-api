@@ -1,20 +1,22 @@
 import 'package:injectable/injectable.dart';
-import 'package:mixology_backend/application/repos/mix_playlist.dart';
+import 'package:mixology_backend/application/repos/unit_of_work.dart';
 import 'package:sane_uuid/uuid.dart';
 
 @injectable
 class DeleteMixPlaylist {
-  final MixPlaylistRepository repo;
+  final UnitOfWorkProvider uowProvider;
 
-  DeleteMixPlaylist(this.repo);
+  DeleteMixPlaylist(this.uowProvider);
 
   Future<void> call({
     required Uuid userId,
     required String playlistId,
   }) async {
-    await repo.delete(
-      userId: userId,
-      playlistId: playlistId,
-    );
+    await uowProvider.withUnitOfWork((uow) async {
+      await uow.mixPlaylistRepo.delete(
+        userId: userId,
+        playlistId: playlistId,
+      );
+    });
   }
 }

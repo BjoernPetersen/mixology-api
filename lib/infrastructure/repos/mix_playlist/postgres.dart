@@ -1,8 +1,5 @@
-import 'package:injectable/injectable.dart';
 import 'package:mixology_backend/application/domain/mix_playlist.dart';
 import 'package:mixology_backend/application/repos/mix_playlist.dart';
-import 'package:mixology_backend/config.dart';
-import 'package:mixology_backend/infrastructure/repos/postgres_mixin.dart';
 import 'package:postgres/postgres.dart';
 import 'package:sane_uuid/uuid.dart';
 
@@ -12,14 +9,10 @@ const columnUserId = 'user_id';
 const columnName = 'name';
 const columnLastMix = 'last_mix';
 
-@Injectable(as: MixPlaylistRepository)
-class PostgresMixPlaylistRepository
-    with PostgresMixin
-    implements MixPlaylistRepository {
-  @override
-  final DatabaseConfig config;
+class PostgresMixPlaylistRepository implements MixPlaylistRepository {
+  final Session _session;
 
-  PostgresMixPlaylistRepository(Config config) : config = config.database;
+  PostgresMixPlaylistRepository(this._session);
 
   MixPlaylist _mixPlaylistFromRow(ResultRow row) {
     final columns = row.toColumnMap();
@@ -37,49 +30,44 @@ class PostgresMixPlaylistRepository
   }
 
   @override
-  Future<List<MixPlaylist>> findByUserId(Uuid userId) {
-    return withSession((session) async {
-      final rows = await session.execute(
-        '''
+  Future<List<MixPlaylist>> findByUserId(Uuid userId) async {
+    final rows = await _session.execute(
+      '''
         SELECT * FROM $tableName
         WHERE $columnUserId = @userId;
         ''',
-        parameters: {
-          'userId': userId.toString(),
-        },
-      );
+      parameters: {
+        'userId': userId.toString(),
+      },
+    );
 
-      if (rows.isEmpty) {
-        return [];
-      }
+    if (rows.isEmpty) {
+      return [];
+    }
 
-      return rows.map(_mixPlaylistFromRow).toList(growable: false);
-    });
+    return rows.map(_mixPlaylistFromRow).toList(growable: false);
   }
 
   @override
-  Future<List<MixPlaylist>> listAll() {
-    return withSession((session) async {
-      final rows = await session.execute(
-        '''
+  Future<List<MixPlaylist>> listAll() async {
+    final rows = await _session.execute(
+      '''
         SELECT * FROM $tableName
         ORDER BY $columnId;
         ''',
-      );
+    );
 
-      if (rows.isEmpty) {
-        return [];
-      }
+    if (rows.isEmpty) {
+      return [];
+    }
 
-      return rows.map(_mixPlaylistFromRow).toList(growable: false);
-    });
+    return rows.map(_mixPlaylistFromRow).toList(growable: false);
   }
 
   @override
   Future<void> insert(MixPlaylist playlist) async {
-    await withSession((session) async {
-      await session.execute(
-        '''
+    await _session.execute(
+      '''
         INSERT INTO $tableName(
           $columnId,
           $columnUserId,
@@ -92,14 +80,13 @@ class PostgresMixPlaylistRepository
           @lastMix
         ) ON CONFLICT DO NOTHING;
         ''',
-        parameters: {
-          'id': playlist.id,
-          'userId': playlist.userId.toString(),
-          'name': playlist.name,
-          'lastMix': playlist.lastMix,
-        },
-      );
-    });
+      parameters: {
+        'id': playlist.id,
+        'userId': playlist.userId.toString(),
+        'name': playlist.name,
+        'lastMix': playlist.lastMix,
+      },
+    );
   }
 
   @override
@@ -108,22 +95,20 @@ class PostgresMixPlaylistRepository
     required String name,
     required DateTime lastMix,
   }) async {
-    await withSession((session) async {
-      await session.execute(
-        '''
+    await _session.execute(
+      '''
         UPDATE $tableName
         SET 
           $columnName = @name,
           $columnLastMix = @lastMix
         WHERE $columnId = @id;
         ''',
-        parameters: {
-          'id': id,
-          'name': name,
-          'lastMix': lastMix,
-        },
-      );
-    });
+      parameters: {
+        'id': id,
+        'name': name,
+        'lastMix': lastMix,
+      },
+    );
   }
 
   @override
@@ -131,17 +116,15 @@ class PostgresMixPlaylistRepository
     required Uuid userId,
     required String playlistId,
   }) async {
-    await withSession((session) async {
-      await session.execute(
-        '''
+    await _session.execute(
+      '''
         DELETE FROM $tableName
         WHERE $columnId = @id AND $columnUserId = @userId;
         ''',
-        parameters: {
-          'id': playlistId,
-          'userId': userId.toString(),
-        },
-      );
-    });
+      parameters: {
+        'id': playlistId,
+        'userId': userId.toString(),
+      },
+    );
   }
 }

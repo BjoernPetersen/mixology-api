@@ -4,8 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:mixology_backend/application/domain/mix_playlist.dart';
 import 'package:mixology_backend/application/ports/spotify_api.dart';
-import 'package:mixology_backend/application/repos/mix_playlist.dart';
-import 'package:mixology_backend/application/repos/user.dart';
+import 'package:mixology_backend/application/repos/unit_of_work.dart';
 import 'package:mixology_backend/interface/api/util.dart';
 import 'package:mutex/mutex.dart';
 import 'package:sentry/sentry.dart';
@@ -14,25 +13,23 @@ import 'package:spotify_api/spotify_api.dart';
 @injectable
 class MixPlaylists {
   final Logger logger;
-  final MixPlaylistRepository playlistRepo;
-  final UserRepository userRepo;
   final SpotifyApiProvider apiProvider;
+  final UnitOfWorkProvider uowProvider;
   final Mutex _mutex;
   final Map<Uuid, SpotifyWebApi> _clients;
 
   MixPlaylists(
     this.apiProvider,
-    this.playlistRepo,
-    this.userRepo,
+    this.uowProvider,
     this.logger,
   )   : _mutex = Mutex(),
         _clients = {};
 
-  Future<SpotifyWebApi> _getApi(Uuid userId) async {
+  Future<SpotifyWebApi> _getApi(UnitOfWork uow, Uuid userId) async {
     return _mutex.protect(() async {
       var client = _clients[userId];
       if (client == null) {
-        final user = await userRepo.findById(userId);
+        final user = await uow.userRepo.findById(userId);
         if (user == null) {
           throw ArgumentError.value(userId, 'userId', 'unknown user');
         }
@@ -45,49 +42,52 @@ class MixPlaylists {
   }
 
   Future<void> call() async {
-    logger.i('Mixing playlists');
-    final playlists = await playlistRepo.listAll();
+    await uowProvider.withUnitOfWork((uow) async {
+      logger.i('Mixing playlists');
+      final playlists = await uow.mixPlaylistRepo.listAll();
 
-    try {
-      MixPlaylist? lastPlaylist;
-      for (final playlist in playlists) {
-        logger.i('Now mixing playlist ${playlist.id}');
+      try {
+        MixPlaylist? lastPlaylist;
+        for (final playlist in playlists) {
+          logger.i('Now mixing playlist ${playlist.id}');
 
-        if (playlist.id == lastPlaylist?.id) {
-          logger.i('Skipping duplicate playlist ${playlist.id}');
-          continue;
-        }
-
-        try {
-          final api = await _getApi(playlist.userId);
-          await _mixPlaylist(api, playlist.id);
-        } on SpotifyApiException catch (e, stack) {
-          logger.e(
-            'Could not mix playlist ${playlist.id} for user ${playlist.userId}',
-            error: e,
-            stackTrace: stack,
-          );
-          await Sentry.captureException(e, stackTrace: stack);
-
-          if (e is AuthorizationException || e is AuthenticationException) {
-            logger.i('Continuing due to likely permission/auth problems');
+          if (playlist.id == lastPlaylist?.id) {
+            logger.i('Skipping duplicate playlist ${playlist.id}');
             continue;
           }
 
-          rethrow;
-        }
+          uowProvider.withUnitOfWork((uow) async {
+            try {
+              final api = await _getApi(uow, playlist.userId);
+              await _mixPlaylist(uow, api, playlist.id);
+              lastPlaylist = playlist;
+            } on SpotifyApiException catch (e, stack) {
+              logger.e(
+                'Could not mix playlist ${playlist.id} for user ${playlist.userId}',
+                error: e,
+                stackTrace: stack,
+              );
+              await Sentry.captureException(e, stackTrace: stack);
 
-        lastPlaylist = playlist;
+              if (e is AuthorizationException || e is AuthenticationException) {
+                logger.i('Continuing due to likely permission/auth problems');
+              } else {
+                rethrow;
+              }
+            }
+          });
+        }
+      } finally {
+        for (final api in _clients.values) {
+          api.close();
+        }
       }
-    } finally {
-      for (final api in _clients.values) {
-        api.close();
-      }
-    }
-    logger.i('Done.');
+      logger.i('Done.');
+    });
   }
 
   Future<void> _mixPlaylist(
+    UnitOfWork uow,
     SpotifyWebApi api,
     String id,
   ) async {
@@ -130,7 +130,7 @@ class MixPlaylists {
       );
     }
 
-    await playlistRepo.update(
+    await uow.mixPlaylistRepo.update(
       id: id,
       name: playlist.name,
       lastMix: DateTime.now().toUtc(),
