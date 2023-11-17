@@ -9,3 +9,5 @@ lib/**/*.g.dart
 lib/**/*.config.dart
 
 .env
+
+flyway/report.*
