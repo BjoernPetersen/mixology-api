@@ -137,6 +137,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.3"
+  clock:
+    dependency: transitive
+    description:
+      name: clock
+      sha256: cb6d7f03e1de671e34607e909a7213e31d7752be4fb66a86d29fe1eb14bfb5cf
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   code_builder:
     dependency: transitive
     description:
@@ -181,10 +189,10 @@ packages:
     dependency: "direct main"
     description:
       name: dart_jsonwebtoken
-      sha256: "6703695f581fc54d0a7e5f281c5538735167605bb9e5abd208c8b330625a92b1"
+      sha256: "063c20d3cee2b626d8a789ba9df0ad21f35012c4e9bd846ce50e921d77123df7"
       url: "https://pub.dev"
     source: hosted
-    version: "2.12.1"
+    version: "2.12.2"
   dart_style:
     dependency: transitive
     description:
@@ -461,10 +469,10 @@ packages:
     dependency: "direct main"
     description:
       name: postgres
-      sha256: ea7442dfe93ab8755d82870a5175a250deed7ebcb541ca15c25fd83cac6a5cd6
+      sha256: "9627629b57bbe5e11ebcd84289d47d95750614968b345446c3f2f087a8084b9d"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.4"
+    version: "3.0.5"
   pub_semver:
     dependency: transitive
     description:
