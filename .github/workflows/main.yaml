@@ -69,7 +69,7 @@ jobs:
           JWT_OAUTH: ${{ secrets.JWT_OAUTH }}
           JWT_REFRESH: ${{ secrets.JWT_REFRESH }}
       - name: Store Kubeconfig
-        run: mkdir ~/.kube && printenv "KUBECONFIG" > ~/.kube/config && chmod 400 ~/.kube/config
+        run: printenv "KUBECONFIG" > ~/.kube/config && chmod 400 ~/.kube/config
         env:
           KUBECONFIG: ${{ secrets.BORN_KUBECONFIG_RAW }}
       - name: Upgrade helm installation
