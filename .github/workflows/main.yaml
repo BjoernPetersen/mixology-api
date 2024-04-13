@@ -48,32 +48,17 @@ jobs:
       image-name: "mixology-api/migrations"
 
   deploy:
-    container: ghcr.io/bjoernpetersen/helm:2.1.0
-    runs-on: born-self-mixology-api
-    needs: [ build-app-image, build-migrations-image ]
-    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
     concurrency: production
+    if: github.ref_name == github.event.repository.default_branch
+    needs:
+      - build-app-image
+      - build-migrations-image
     steps:
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v4
       - uses: actions/checkout@v4
-      - name: Substitute environment variables in values.yaml
-        run: "envsubst < values.yaml > values_sub.yaml && mv values_sub.yaml values.yaml"
-        env:
-          APP_IMAGE_NAME: "ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG }}/${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}/app"
-          MIGRATIONS_IMAGE_NAME: "ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG }}/${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}/migrations"
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          JWT_ACCESS: ${{ secrets.JWT_ACCESS }}
-          JWT_OAUTH: ${{ secrets.JWT_OAUTH }}
-          JWT_REFRESH: ${{ secrets.JWT_REFRESH }}
-      - name: Store Kubeconfig
-        run: printenv "KUBECONFIG" > ~/.kube/config && chmod 400 ~/.kube/config
-        env:
-          KUBECONFIG: ${{ secrets.BORN_KUBECONFIG_RAW }}
-      - name: Upgrade helm installation
-        run: helm upgrade api . --install --namespace=mixology --atomic
+        with:
+          fetch-depth: 0
+      - run: git push origin main:release
 
   clean:
     concurrency: cleanup
