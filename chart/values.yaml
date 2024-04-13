@@ -6,7 +6,7 @@ image:
 
 postgres:
   db: mixology
-  user: mixology
+  user: born-mixology.mixology
   host: born-postgres.born-postgres
 
 spotify:
