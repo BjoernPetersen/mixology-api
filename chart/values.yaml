@@ -7,7 +7,7 @@ image:
 postgres:
   db: mixology
   user: born-mixology.mixology
-  host: born-postgres.born-postgres
+  host: born-postgres
 
 spotify:
   clientId: 1d0817ae3abb47b6aa6b4dca612bf63f
