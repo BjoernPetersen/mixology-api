@@ -1,0 +1,14 @@
+appVersion: latest
+
+image:
+  app: ghcr.io/bjoernpetersen/mixology-api/app
+  migrations: ghcr.io/bjoernpetersen/mixology-api/migrations
+
+postgres:
+  db: mixology
+  user: mixology
+  host: born-postgres.born-postgres
+
+spotify:
+  clientId: 1d0817ae3abb47b6aa6b4dca612bf63f
+  redirectUri: "https://mix.bembel.party/auth/callback"

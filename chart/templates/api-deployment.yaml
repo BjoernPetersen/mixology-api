@@ -20,7 +20,7 @@ spec:
       terminationGracePeriodSeconds: 5
       initContainers:
         - name: migrations
-          image: {{ .Values.image.migrations }}
+          image: {{ .Values.image.migrations }}:{{ .Values.appVersion }}
           args:
             - migrate
             - -skipCheckForUpdate

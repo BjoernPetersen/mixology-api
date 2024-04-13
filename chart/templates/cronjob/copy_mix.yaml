@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: mix-playlists
+  name: mix-copy-playlists
 spec:
   schedule: '0 3 * * *'
   concurrencyPolicy: Forbid
@@ -16,15 +16,15 @@ spec:
           restartPolicy: Never
           containers:
             - name: app
-              image: {{ .Values.image.app }}
-              args: [ mix ]
+              image: {{ .Values.image.app }}:{{ .Values.appVersion }}
+              args: [ mix-copy ]
               resources:
                 requests:
                   cpu: 50m
-                  memory: 64Mi
+                  memory: 128Mi
                 limits:
                   cpu: 100m
-                  memory: 128Mi
+                  memory: 256Mi
               env:
                 - name: DB_PASSWORD
                   valueFrom:
