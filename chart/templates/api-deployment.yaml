@@ -42,7 +42,7 @@ spec:
                   key: password
       containers:
         - name: app
-          image: {{ .Values.image.app }}
+          image: {{ .Values.image.app }}:{{ .Values.appVersion }}
           args: [ run-api ]
           resources:
             requests:
