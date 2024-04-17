@@ -20,11 +20,11 @@ spec:
               args: [ mix-copy ]
               resources:
                 requests:
-                  cpu: 50m
+                  cpu: 100m
                   memory: 128Mi
                 limits:
-                  cpu: 100m
-                  memory: 256Mi
+                  cpu: 200m
+                  memory: 512Mi
               env:
                 - name: DB_PASSWORD
                   valueFrom:

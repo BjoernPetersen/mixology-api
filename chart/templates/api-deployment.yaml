@@ -52,9 +52,13 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+          startupProbe:
+            httpGet:
+              port: http
+              path: /health/live
           livenessProbe:
             httpGet:
-              port: 8080
+              port: http
               path: /health/live
           ports:
             - containerPort: 8080
