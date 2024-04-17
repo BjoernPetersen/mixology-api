@@ -50,8 +50,8 @@ spec:
               cpu: 10m
               memory: 32Mi
             limits:
-              cpu: 25m
-              memory: 64Mi
+              cpu: 200m
+              memory: 128Mi
           livenessProbe:
             httpGet:
               port: 8080
