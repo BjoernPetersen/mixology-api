@@ -9,7 +9,7 @@ abstract class UserAuthorizationModule {
     Config config,
   ) {
     final appConfig = config.spotifyConfig;
-    return AuthorizationCodeUserAuthorization(
+    return AuthorizationCodeUserAuthorization.withoutPkce(
       clientId: appConfig.clientId,
       redirectUri: Uri.parse(appConfig.redirectUri),
       stateManager: stateManager,

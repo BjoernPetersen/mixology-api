@@ -12,7 +12,7 @@ class SimpleSpotifyApiProvider implements SpotifyApiProvider {
   @override
   SpotifyWebApi provideForRefreshToken(String refreshToken) {
     return SpotifyWebApi(
-      refresher: AuthorizationCodeRefresher(
+      refresher: AuthorizationCodeRefresher.withoutPkce(
         clientId: _config.clientId,
         clientSecret: _config.clientSecret,
         refreshTokenStorage: MemoryRefreshTokenStorage(refreshToken),
