@@ -266,10 +266,10 @@ packages:
     dependency: transitive
     description:
       name: graphs
-      sha256: aedc5a15e78fc65a6e23bcd927f24c64dd995062bcd1ca6eda65a3cff92a4d19
+      sha256: "741bbf84165310a68ff28fe9e727332eef1407342fca52759cb21ad8177bb8d0"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.1"
+    version: "2.3.2"
   hotreloader:
     dependency: transitive
     description:
@@ -282,10 +282,10 @@ packages:
     dependency: "direct dev"
     description:
       name: http
-      sha256: "761a297c042deedc1ffbb156d6e2af13886bb305c2a343a4d972504cd67dd938"
+      sha256: b9c29a161230ee03d3ccf545097fccd9b87a5264228c5d348202e0f0c28f9010
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.1"
+    version: "1.2.2"
   http_methods:
     dependency: transitive
     description:
@@ -370,10 +370,10 @@ packages:
     dependency: "direct main"
     description:
       name: logger
-      sha256: af05cc8714f356fd1f3888fb6741cbe9fbe25cdb6eedbab80e1a6db21047d4a4
+      sha256: "697d067c60c20999686a0add96cf6aba723b3aa1f83ecf806a8097231529ec32"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.0"
+    version: "2.4.0"
   logging:
     dependency: transitive
     description:
@@ -538,10 +538,10 @@ packages:
     dependency: "direct main"
     description:
       name: sentry
-      sha256: "7342ef4c18932881730ac941a07a6e4cf76fe99cd1ea3bef06e53a6a1402dec0"
+      sha256: cbc29cbdd8a047aab3df42f826daf07e58dfb2e1d550895d1021a6d4e618b00d
       url: "https://pub.dev"
     source: hosted
-    version: "8.3.0"
+    version: "8.4.0"
   shelf:
     dependency: "direct main"
     description:
@@ -570,10 +570,10 @@ packages:
     dependency: "direct main"
     description:
       name: shelf_plus
-      sha256: "4dba816c3584bca28ee8b31de4d08199e48c0e54db8a2ad0e94f777dd7ab625c"
+      sha256: "4631a26e9164f8a769140d967689a0240d3d66ae213cf0c6821eb8820ebd7d0e"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.2"
+    version: "1.8.0"
   shelf_router:
     dependency: "direct main"
     description:
@@ -770,18 +770,18 @@ packages:
     dependency: transitive
     description:
       name: web
-      sha256: "97da13628db363c635202ad97068d47c5b8aa555808e7a9411963c533b449b27"
+      sha256: d43c1d6b787bf0afad444700ae7f4db8827f701bc61c255ac8d328c6f4d52062
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.1"
+    version: "1.0.0"
   web_socket_channel:
     dependency: transitive
     description:
       name: web_socket_channel
-      sha256: "58c6666b342a38816b2e7e50ed0f1e261959630becd4c879c4f26bfa14aa5a42"
+      sha256: d88238e5eac9a42bb43ca4e721edba3c08c6354d4a53063afaa568516217621b
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.5"
+    version: "2.4.0"
   webkit_inspection_protocol:
     dependency: transitive
     description:
