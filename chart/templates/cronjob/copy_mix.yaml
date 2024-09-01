@@ -11,6 +11,7 @@ spec:
   timeZone: "Europe/Berlin"
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 7200
       template:
         spec:
           restartPolicy: Never

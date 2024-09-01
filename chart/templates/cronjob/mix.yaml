@@ -13,6 +13,7 @@ spec:
     spec:
       template:
         spec:
+          activeDeadlineSeconds: 7200
           restartPolicy: Never
           containers:
             - name: app
