@@ -18,6 +18,13 @@ spec:
       labels:
         app: api
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: api
       terminationGracePeriodSeconds: 5
       initContainers:
         - name: migrations
