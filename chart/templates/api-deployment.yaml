@@ -8,8 +8,8 @@ spec:
   revisionHistoryLimit: 2
   strategy:
     rollingUpdate:
-      maxSurge: 100%
-      maxUnavailable: 0
+      maxSurge: 50%
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: api
